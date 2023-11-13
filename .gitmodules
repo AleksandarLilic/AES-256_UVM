@@ -1,0 +1,3 @@
+[submodule "aes-256_src"]
+	path = aes-256_src
+	url = git@github.com:AleksandarLilic/AES-256_hardware_design.git

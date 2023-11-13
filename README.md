@@ -10,6 +10,11 @@ set_property −name {xsim.elaborate.xelab.more_options} −value {−L uvm} −
 set_property −name {xsim.compile.xvlog.more_options} −value {−L uvm} −objects [get_filesets sim_1]
 ```
 
+Increase multithreading to 8 threads (speeds up some parts of the elaboration)
+```
+set_property -name {xsim.elaborate.mt_level} -value {8} -objects [get_filesets sim_1]
+```
+
 Set up level of verbosity, as needed
 ```
 set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_VERBOSITY=UVM_HIGH} -objects [get_filesets sim_1]

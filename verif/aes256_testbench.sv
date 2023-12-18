@@ -19,7 +19,7 @@ initial begin
     DUT_aes256_if_i.clk = 0;
     forever begin
         #5 DUT_aes256_if_i.clk = ~DUT_aes256_if_i.clk;
-        if (DUT_aes256_if_i.clk == 1'b1) `uvm_info("clock", "clk rising edge", UVM_LOW)
+        if (DUT_aes256_if_i.clk == 1'b1) `uvm_info("clock", "clk rising edge", UVM_FULL)
     end
 end
 

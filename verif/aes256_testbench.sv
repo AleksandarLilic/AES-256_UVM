@@ -1,11 +1,10 @@
 `timescale 1ns/1ns
 
 `include "uvm_macros.svh"
-`include "aes256_test_pkg.svh"
+`include "aes256_test.svh"
 
 module top;
 import uvm_pkg::*;
-import aes256_test_pkg::*;
 
 aes256_if DUT_aes256_if_i();
 

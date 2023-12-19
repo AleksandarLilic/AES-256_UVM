@@ -1,7 +1,5 @@
 import uvm_pkg::*;
-
-// create enum for key state with 2 state: NOT_READY and EXPANDED
-typedef enum {NOT_READY, EXPANDED} key_state_t;
+`include "aes256_inc.svh"
 
 class aes256_driver extends uvm_driver #(aes256_seq_item);
     `uvm_component_utils(aes256_driver)
@@ -31,8 +29,10 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                 DUT_vif.master_key = item.master_key;
                 DUT_vif.key_expand_start = item.key_expand_start;
                 repeat (item.key_expand_start_pulse) @(posedge DUT_vif.clk);
-                #1;
+                #1; // FIXME: why is this delay needed for exp to start properly but not for enc?
                 DUT_vif.key_expand_start = 0;
+                // TODO: it's valid to get request for new key expansion while expanding
+                // current expansion should be aborted in that case
                 fork: fork_key_expansion
                     begin
                         repeat (KEY_EXP_TIMEOUT_CLOCKS) @(posedge DUT_vif.clk);
@@ -53,11 +53,10 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                 DUT_vif.data_in = item.data_in;
                 DUT_vif.next_val_req = item.next_val_req;
                 repeat (item.next_val_req_pulse) @(posedge DUT_vif.clk);
-                #1;
                 DUT_vif.next_val_req = 0;
                 // TODO: it's legal to get request for new key expansion while encrypting
                 // encryption should be aborted in that case
-                // it's also valid to get request for new ciphertext while encrypting
+                // TODO: it's also valid to get request for new ciphertext while encrypting
                 // current encryption should be aborted in that case
                 fork: fork_encryption
                     begin
@@ -74,7 +73,7 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                 join_any: fork_encryption
                 disable fork_encryption;
                 #1;
-                repeat (item.wait_at_the_end) @(posedge DUT_vif.clk);
+                repeat (item.wait_after_enc) @(posedge DUT_vif.clk);
             end
             else begin
                 `uvm_info(get_type_name(), $sformatf("Inactive sequence item"), UVM_HIGH)

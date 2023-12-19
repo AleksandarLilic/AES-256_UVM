@@ -9,8 +9,6 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
     key_state_t key_state = NOT_READY;
     const shortint unsigned KEY_EXP_TIMEOUT_CLOCKS = 100;
     const shortint unsigned ENC_TIMEOUT_CLOCKS = 100;
-    bit fork_workaround_exp = 0;
-    bit fork_workaround_enc = 0;
 
     function new (string name = "aes256_driver", uvm_component parent = null);
         super.new(name, parent);
@@ -35,22 +33,17 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                 repeat (item.key_expand_start_pulse) @(posedge DUT_vif.clk);
                 #1;
                 DUT_vif.key_expand_start = 0;
-                fork_workaround_exp = 0;
-                fork
+                fork: fork_key_expansion
                     begin
-                        repeat (KEY_EXP_TIMEOUT_CLOCKS) begin
-                            if (fork_workaround_exp == 0) @(posedge DUT_vif.clk);
-                        end
-                        if (fork_workaround_exp == 0)
-                            `uvm_fatal(get_type_name(), "Key expansion timeout. Simulation aborted");
+                        repeat (KEY_EXP_TIMEOUT_CLOCKS) @(posedge DUT_vif.clk);
+                        `uvm_fatal(get_type_name(), "Key expansion timeout. Simulation aborted");
                     end
                     begin
                         @(posedge DUT_vif.key_ready);
-                        fork_workaround_exp = 1;
                         key_state = EXPANDED;
-                    end
-                join_any
-                `uvm_info(get_type_name(), "fork-join finished", UVM_HIGH)
+                    end 
+                join_any: fork_key_expansion
+                disable fork_key_expansion;
             end
             else if (item.next_val_req == 1) begin
                 `uvm_info(get_type_name(), $sformatf("next_val_req: %0d", item.next_val_req), UVM_HIGH)
@@ -62,18 +55,14 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                 repeat (item.next_val_req_pulse) @(posedge DUT_vif.clk);
                 #1;
                 DUT_vif.next_val_req = 0;
-                fork_workaround_enc = 0;
                 // TODO: it's legal to get request for new key expansion while encrypting
                 // encryption should be aborted in that case
                 // it's also valid to get request for new ciphertext while encrypting
                 // current encryption should be aborted in that case
-                fork
+                fork: fork_encryption
                     begin
-                        repeat (ENC_TIMEOUT_CLOCKS) begin
-                            if (fork_workaround_enc == 0) @(posedge DUT_vif.clk);
-                        end
-                        if (fork_workaround_enc == 0)
-                            `uvm_fatal(get_type_name(), "Encryption timeout. Simulation aborted");
+                        repeat (ENC_TIMEOUT_CLOCKS) @(posedge DUT_vif.clk);
+                        `uvm_fatal(get_type_name(), "Encryption timeout. Simulation aborted");
                     end
                     begin
                         @(posedge DUT_vif.next_val_ready);
@@ -81,9 +70,9 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                         // mechanism to pipeline this with new request
                         // using negedge for now
                         @(negedge DUT_vif.next_val_ready);
-                        fork_workaround_enc = 1;
                     end
-                join_any
+                join_any: fork_encryption
+                disable fork_encryption;
                 #1;
                 repeat (item.wait_at_the_end) @(posedge DUT_vif.clk);
             end

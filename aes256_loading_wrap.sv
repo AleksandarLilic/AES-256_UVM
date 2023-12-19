@@ -1,17 +1,17 @@
 
 module aes256_loading_wrap(
-    aes256_if aes256_if_i
+    aes256_if aes256_if_conn
 );
 
 aes256_loading DUT_aes256_loading_i(
-    .clk(aes256_if_i.clk),
-    .pi_key_expand_start(aes256_if_i.key_expand_start),
-    .pi_master_key(aes256_if_i.master_key),
-    .po_key_ready(aes256_if_i.key_ready),
-    .pi_next_val_req(aes256_if_i.next_val_req),
-    .pi_data(aes256_if_i.data_in),
-    .po_next_val_ready(aes256_if_i.next_val_ready),
-    .po_data(aes256_if_i.data_out)
+    .clk(aes256_if_conn.clk),
+    .pi_key_expand_start(aes256_if_conn.key_expand_start),
+    .pi_master_key(aes256_if_conn.master_key),
+    .po_key_ready(aes256_if_conn.key_ready),
+    .pi_next_val_req(aes256_if_conn.next_val_req),
+    .pi_data(aes256_if_conn.data_in),
+    .po_next_val_ready(aes256_if_conn.next_val_ready),
+    .po_data(aes256_if_conn.data_out)
 );
 endmodule: aes256_loading_wrap
 

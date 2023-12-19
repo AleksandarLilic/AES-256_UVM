@@ -9,7 +9,7 @@ import uvm_pkg::*;
 aes256_if DUT_aes256_if_i();
 
 aes256_loading_wrap DUT_aes256_loading_wrap_i(
-    .aes256_if_i(DUT_aes256_if_i)
+    .aes256_if_conn(DUT_aes256_if_i)
 );
 
 initial begin

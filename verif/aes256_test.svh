@@ -23,8 +23,9 @@ class aes256_test extends uvm_test;
         #10;
         seq = aes256_sequence::type_id::create("seq");
         assert(seq.randomize() with {
-            number_of_keys == 2;
-            number_of_plaintexts == 10;
+            number_of_keys == 10;
+            number_of_plaintexts == 0;
+            wait_for_key_ready == 0;
         });
         `uvm_info(get_type_name(), "sequence being sent to sequencer", UVM_LOW)
         seq.start(agent_1.sequencer_1);

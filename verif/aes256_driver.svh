@@ -31,19 +31,19 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                 repeat (item.key_expand_start_pulse) @(posedge DUT_vif.clk);
                 #1; // FIXME: why is this delay needed for exp to start properly but not for enc?
                 DUT_vif.key_expand_start = 0;
-                // TODO: it's valid to get request for new key expansion while expanding
-                // current expansion should be aborted in that case
-                fork: fork_key_expansion
-                    begin
-                        repeat (KEY_EXP_TIMEOUT_CLOCKS) @(posedge DUT_vif.clk);
-                        `uvm_fatal(get_type_name(), "Key expansion timeout. Simulation aborted");
-                    end
-                    begin
-                        @(posedge DUT_vif.key_ready);
-                        key_state = EXPANDED;
-                    end 
-                join_any: fork_key_expansion
-                disable fork_key_expansion;
+                if (item.wait_for_key_ready == 1) begin
+                    fork: fork_key_expansion
+                        begin
+                            repeat (KEY_EXP_TIMEOUT_CLOCKS) @(posedge DUT_vif.clk);
+                            `uvm_fatal(get_type_name(), "Key expansion timeout. Simulation aborted");
+                        end
+                        begin
+                            @(posedge DUT_vif.key_ready);
+                            key_state = EXPANDED;
+                        end 
+                    join_any: fork_key_expansion
+                    disable fork_key_expansion;
+                end
             end
             else if (item.next_val_req == 1) begin
                 `uvm_info(get_type_name(), $sformatf("next_val_req: %0d", item.next_val_req), UVM_HIGH)
@@ -73,7 +73,6 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                 join_any: fork_encryption
                 disable fork_encryption;
                 #1;
-                repeat (item.wait_after_enc) @(posedge DUT_vif.clk);
             end
             else begin
                 `uvm_info(get_type_name(), $sformatf("Inactive sequence item"), UVM_HIGH)
@@ -82,6 +81,7 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                 DUT_vif.data_in = item.data_in;
                 DUT_vif.master_key = item.master_key;
             end
+            repeat (item.wait_at_the_end) @(posedge DUT_vif.clk);
             seq_item_port.item_done();
         end
     endtask: run_phase

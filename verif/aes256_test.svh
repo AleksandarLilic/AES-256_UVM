@@ -22,6 +22,10 @@ class aes256_test extends uvm_test;
         `uvm_info(get_type_name(), "objection raised", UVM_LOW)
         #10;
         seq = aes256_sequence::type_id::create("seq");
+        assert(seq.randomize() with {
+            number_of_keys == 2;
+            number_of_plaintexts == 10;
+        });
         `uvm_info(get_type_name(), "sequence being sent to sequencer", UVM_LOW)
         seq.start(agent_1.sequencer_1);
         `uvm_info(get_type_name(), "sequencer finished", UVM_LOW)

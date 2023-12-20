@@ -2,16 +2,13 @@ import uvm_pkg::*;
 `include "aes256_inc.svh"
 
 class aes256_sequence extends uvm_sequence#(aes256_seq_item);
-    rand int number_of_keys;
-    rand int number_of_plaintexts;
+    rand int number_of_keys = 1;
+    rand int number_of_plaintexts = 2;
 
     `uvm_object_utils_begin(aes256_sequence)
         `uvm_field_int(number_of_keys, UVM_DEFAULT)
         `uvm_field_int(number_of_plaintexts, UVM_DEFAULT)
     `uvm_object_utils_end
-
-    //constraint c_number_of_keys { number_of_keys == 1; }
-    //constraint c_number_of_plaintexts { number_of_plaintexts == 2; }
 
     function new (string name = "aes256_sequence");
         super.new(name);
@@ -21,8 +18,6 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
         aes256_seq_item item;
         int key_cnt;
         int pt_cnt;
-        number_of_keys = 2;
-        number_of_plaintexts = 10;
 
         for (key_cnt = 0; key_cnt < number_of_keys; key_cnt++) begin
             `uvm_info(get_type_name(), $sformatf("key counter: %0d", key_cnt), UVM_LOW)
@@ -43,4 +38,3 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
     endtask: body
 
 endclass: aes256_sequence
-    

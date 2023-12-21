@@ -1,7 +1,8 @@
 import uvm_pkg::*;
+`include "aes256_inc.svh"
 
 class aes256_seq_item extends uvm_sequence_item;
-    const byte unsigned LOADING_PERIODS = 8;
+    const byte unsigned LOADING_CYCLES = 8;
     // design I/O
     bit key_expand_start = 0;
     rand bit [255:0] master_key = 0;
@@ -12,20 +13,18 @@ class aes256_seq_item extends uvm_sequence_item;
     rand byte unsigned key_expand_start_delay;
     rand byte unsigned next_val_req_pulse;
     rand byte unsigned next_val_req_delay;
-    byte unsigned wait_at_the_end = 0;
-    rand bit wait_for_key_ready = 1;
+    rand bool_t wait_for_key_ready = TRUE;
     
     `uvm_object_utils_begin(aes256_seq_item)
-        `uvm_field_int(key_expand_start, UVM_DEFAULT)
+        `uvm_field_int(key_expand_start, UVM_DEFAULT | UVM_BIN)
         `uvm_field_int(master_key, UVM_DEFAULT)
-        `uvm_field_int(next_val_req, UVM_DEFAULT)
+        `uvm_field_int(next_val_req, UVM_DEFAULT | UVM_BIN)
         `uvm_field_int(data_in, UVM_DEFAULT)
-        `uvm_field_int(key_expand_start_pulse, UVM_DEFAULT)
-        `uvm_field_int(key_expand_start_delay, UVM_DEFAULT)
-        `uvm_field_int(next_val_req_pulse, UVM_DEFAULT)
-        `uvm_field_int(next_val_req_delay, UVM_DEFAULT)
-        `uvm_field_int(wait_at_the_end, UVM_DEFAULT)
-        `uvm_field_int(wait_for_key_ready, UVM_DEFAULT)
+        `uvm_field_int(key_expand_start_pulse, UVM_DEFAULT | UVM_UNSIGNED)
+        `uvm_field_int(key_expand_start_delay, UVM_DEFAULT | UVM_UNSIGNED)
+        `uvm_field_int(next_val_req_pulse, UVM_DEFAULT | UVM_UNSIGNED)
+        `uvm_field_int(next_val_req_delay, UVM_DEFAULT | UVM_UNSIGNED)
+        `uvm_field_enum(bool_t, wait_for_key_ready, UVM_DEFAULT)
     `uvm_object_utils_end
 
     constraint c_key_expand_start_delay {
@@ -38,7 +37,7 @@ class aes256_seq_item extends uvm_sequence_item;
     }
     constraint c_next_val_req_delay {
         next_val_req_delay >= 0;
-        next_val_req_delay <= 2*LOADING_PERIODS;
+        next_val_req_delay <= 2*LOADING_CYCLES;
     }
     constraint c_next_val_req_pulse {
         next_val_req_pulse >= 1;

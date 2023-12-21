@@ -4,8 +4,9 @@ import uvm_pkg::*;
 class aes256_sequence extends uvm_sequence#(aes256_seq_item);
     rand int number_of_keys = 1;
     rand int number_of_plaintexts = 2;
-    rand bit wait_for_key_ready = 1; // TODO: this should be used for coverage to hit every state of key expansion FSM to get to idle from every state;
+    rand bool_t wait_for_key_ready = TRUE; // TODO: this should be used for coverage to hit every state of key expansion FSM to get to idle from every state;
     // TODO: implement similar wait for the encryption FSM
+    rand byte unsigned wait_period_at_the_end = 10;
 
     `uvm_object_utils_begin(aes256_sequence)
         `uvm_field_int(number_of_keys, UVM_DEFAULT)
@@ -30,24 +31,20 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
             item = aes256_seq_item::type_id::create($sformatf("item_%0d_%0d", key_cnt, pt_cnt));
             item.key_expand_start = 1;
             item.next_val_req = 0;
-            
-            `ADD_WAIT_AT_THE_END(pt_cnt, number_of_plaintexts, key_cnt, number_of_keys - 1, item)
-            if (key_cnt == number_of_keys - 1) begin
-                // override last key expansion to generate one valid key at the end
-                `SEND_ITEM_RAND_WITH(item, { key_expand_start_delay >= 10; wait_for_key_ready == 1; })
-            end
-            else begin
-                `SEND_ITEM_RAND_WITH(item, {key_expand_start_delay >= 10;})
-            end
+            `SEND_ITEM_RAND_WITH(item, {wait_for_key_ready == this.wait_for_key_ready;
+                                        key_expand_start_delay >= 10; })
             
             for (pt_cnt = 0; pt_cnt < number_of_plaintexts; pt_cnt++) begin
                 `uvm_info(get_type_name(), $sformatf("plaintext counter: %0d", pt_cnt), UVM_LOW)
                 item.key_expand_start = 0;
                 item.next_val_req = 1;
-                // add wait period for the last encryption of the last key
-                `ADD_WAIT_AT_THE_END(pt_cnt, number_of_plaintexts - 1, key_cnt, number_of_keys - 1, item)
                 `SEND_ITEM_RAND(item);
             end
+        end
+        item.key_expand_start = 0;
+        item.next_val_req = 0;
+        repeat (wait_period_at_the_end) begin
+            `SEND_ITEM(item);
         end
 
     endtask: body

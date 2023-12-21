@@ -31,7 +31,7 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                 repeat (item.key_expand_start_pulse) @(posedge DUT_vif.clk);
                 #1; // FIXME: why is this delay needed for exp to start properly but not for enc?
                 DUT_vif.key_expand_start = 0;
-                if (item.wait_for_key_ready == 1) begin
+                if (item.wait_for_key_ready == TRUE) begin
                     fork: fork_key_expansion
                         begin
                             repeat (KEY_EXP_TIMEOUT_CLOCKS) @(posedge DUT_vif.clk);
@@ -80,8 +80,8 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                 DUT_vif.key_expand_start = item.key_expand_start;
                 DUT_vif.data_in = item.data_in;
                 DUT_vif.master_key = item.master_key;
+                @(posedge DUT_vif.clk);
             end
-            repeat (item.wait_at_the_end) @(posedge DUT_vif.clk);
             seq_item_port.item_done();
         end
     endtask: run_phase

@@ -10,6 +10,7 @@ aes256_loading DUT_aes256_loading_i(
     .po_key_ready(aes256_if_conn.key_ready),
     .pi_next_val_req(aes256_if_conn.next_val_req),
     .pi_data(aes256_if_conn.data_in),
+    .po_enc_done(aes256_if_conn.enc_done),
     .po_next_val_ready(aes256_if_conn.next_val_ready),
     .po_data(aes256_if_conn.data_out)
 );
@@ -22,6 +23,7 @@ interface aes256_if;
     logic key_ready;
     logic next_val_req;
     logic [127:0] data_in;
+    logic enc_done;
     logic next_val_ready;
     logic [7:0] data_out;
 endinterface: aes256_if

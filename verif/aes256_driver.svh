@@ -5,8 +5,8 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
     `uvm_component_utils(aes256_driver)
     virtual aes256_if DUT_vif;
     key_state_t key_state = NOT_READY;
-    const shortint unsigned KEY_EXP_TIMEOUT_CLOCKS = 100;
-    const shortint unsigned ENC_TIMEOUT_CLOCKS = 100;
+    const shortint unsigned KEY_EXP_TIMEOUT_CLOCKS = 86; // takes 84 clocks to expand one key
+    const shortint unsigned ENC_TIMEOUT_CLOCKS = 60; // takes 58 clocks to encrypt one plaintext block
 
     function new (string name = "aes256_driver", uvm_component parent = null);
         super.new(name, parent);
@@ -64,11 +64,7 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                         `uvm_fatal(get_type_name(), "Encryption timeout. Simulation aborted");
                     end
                     begin
-                        @(posedge DUT_vif.next_val_ready);
-                        // FIXME: request can come in when loading is working, but needs 
-                        // mechanism to pipeline this with new request
-                        // using negedge for now
-                        @(negedge DUT_vif.next_val_ready);
+                        @(posedge DUT_vif.enc_done);
                     end
                 join_any: fork_encryption
                 disable fork_encryption;

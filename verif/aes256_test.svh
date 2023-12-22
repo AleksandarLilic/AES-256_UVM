@@ -23,6 +23,8 @@ class aes256_test extends uvm_test;
         #10;
         seq = aes256_sequence::type_id::create("seq");
         
+        // test that key generation can be interrupted by new key request
+        // and continue after new request
         assert(seq.randomize() with {
             number_of_keys == 10;
             number_of_plaintexts == 0;
@@ -31,11 +33,12 @@ class aes256_test extends uvm_test;
         });
         seq.start(agent_1.sequencer_1);
         
+        // test simple scenario with one key and 10 plaintexts
         assert(seq.randomize() with {
             number_of_keys == 1;
-            number_of_plaintexts == 1;
+            number_of_plaintexts == 10;
             wait_for_key_ready == TRUE;
-            wait_period_at_the_end == 10;
+            wait_period_at_the_end == 20;
         });
         seq.start(agent_1.sequencer_1);
         

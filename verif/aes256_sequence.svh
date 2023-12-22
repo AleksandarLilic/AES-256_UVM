@@ -38,9 +38,11 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
                 `uvm_info(get_type_name(), $sformatf("plaintext counter: %0d", pt_cnt), UVM_LOW)
                 item.key_expand_start = 0;
                 item.next_val_req = 1;
-                `SEND_ITEM_RAND(item);
+                // pipleline the requests with no delay
+                `SEND_ITEM_RAND_WITH(item, {next_val_req_delay == 1; })
             end
         end
+        
         item.key_expand_start = 0;
         item.next_val_req = 0;
         repeat (wait_period_at_the_end) begin

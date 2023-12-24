@@ -5,8 +5,9 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
     rand int number_of_keys = 1;
     rand int number_of_plaintexts = 2;
     rand bool_t wait_for_key_ready = TRUE; // TODO: this should be used for coverage to hit every state of key expansion FSM to get to idle from every state;
-    // TODO: implement similar wait for the encryption FSM
+    rand bool_t wait_for_enc_done = TRUE;
     rand byte unsigned wait_period_at_the_end = 10;
+    rand byte unsigned start_delay = 0;
 
     `uvm_object_utils_begin(aes256_sequence)
         `uvm_field_int(number_of_keys, UVM_DEFAULT)
@@ -15,6 +16,11 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
 
     constraint c_number_of_keys {
         number_of_keys >= 1;
+    }
+
+    constraint c_start_delay {
+        start_delay >= 1;
+        start_delay <= 10;
     }
 
     function new (string name = "aes256_sequence");
@@ -27,19 +33,20 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
         int pt_cnt = 0;
 
         for (key_cnt = 0; key_cnt < number_of_keys; key_cnt++) begin
-            `uvm_info(get_type_name(), $sformatf("Master Key counter: %0d", key_cnt), UVM_MEDIUM)
+            `uvm_info(get_type_name(), $sformatf(" ===> New Master Key. Count: %0d <===", key_cnt), UVM_MEDIUM)
             item = aes256_seq_item::type_id::create($sformatf("item_%0d_%0d", key_cnt, pt_cnt));
             item.key_expand_start = 1;
             item.next_val_req = 0;
             `SEND_ITEM_RAND_WITH(item, {wait_for_key_ready == this.wait_for_key_ready;
-                                        key_expand_start_delay >= 10; })
+                                        key_expand_start_delay == 1 + start_delay*bit'(!this.wait_for_key_ready); })
             
             for (pt_cnt = 0; pt_cnt < number_of_plaintexts; pt_cnt++) begin
-                `uvm_info(get_type_name(), $sformatf("Plaintext counter: %0d", pt_cnt), UVM_MEDIUM)
+                `uvm_info(get_type_name(), $sformatf(" ===> New Plaintext. Count: %0d <===", pt_cnt), UVM_MEDIUM)
                 item.key_expand_start = 0;
                 item.next_val_req = 1;
                 // pipleline the requests with no delay
-                `SEND_ITEM_RAND_WITH(item, {next_val_req_delay == 1; })
+                `SEND_ITEM_RAND_WITH(item, {wait_for_enc_done == this.wait_for_enc_done;
+                                            next_val_req_delay == 1 + start_delay*bit'(!this.wait_for_enc_done); })
             end
         end
         

@@ -24,18 +24,30 @@ class aes256_test extends uvm_test;
         // test that key generation can be interrupted by new key request
         // and continue after new request
         assert(seq.randomize() with {
-            number_of_keys == 10;
+            number_of_keys == 5;
             number_of_plaintexts == 0;
             wait_for_key_ready == FALSE;
             wait_period_at_the_end == 0;
         });
         seq.start(agent_1.sequencer_1);
-        
-        // test simple scenario with one key and 10 plaintexts
+
+        // test that encryption can be interrupted by new key request
+        // and continue after new request
         assert(seq.randomize() with {
             number_of_keys == 1;
-            number_of_plaintexts == 10;
+            number_of_plaintexts == 5;
             wait_for_key_ready == TRUE;
+            wait_for_enc_done == FALSE;
+            wait_period_at_the_end == 0;
+        });
+        seq.start(agent_1.sequencer_1);
+        
+        // test simple scenario with key expansion and encryption
+        assert(seq.randomize() with {
+            number_of_keys == 1;
+            number_of_plaintexts == 5;
+            wait_for_key_ready == TRUE;
+            wait_for_enc_done == TRUE;
             wait_period_at_the_end == 20;
         });
         seq.start(agent_1.sequencer_1);

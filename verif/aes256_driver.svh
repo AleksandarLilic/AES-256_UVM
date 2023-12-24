@@ -23,9 +23,10 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
         forever begin
             seq_item_port.get_next_item(item);
             if (item.key_expand_start == 1) begin
-                `uvm_info(get_type_name(), "Key expansion started", UVM_HIGH)
+                `uvm_info(get_type_name(), "Key expansion started", UVM_MEDIUM)
                 key_state = NOT_READY;
                 repeat (item.key_expand_start_delay) @(posedge DUT_vif.clk);
+                #1;
                 DUT_vif.master_key = item.master_key;
                 DUT_vif.key_expand_start = item.key_expand_start;
                 repeat (item.key_expand_start_pulse) @(posedge DUT_vif.clk);
@@ -44,31 +45,39 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                     join_any: fork_key_expansion
                     disable fork_key_expansion;
                 end
+                else begin
+                    `uvm_info(get_type_name(), "Key expansion not waited for", UVM_MEDIUM)
+                end
             end
             else if (item.next_val_req == 1) begin
-                `uvm_info(get_type_name(), "New ciphertext requested", UVM_HIGH)
+                `uvm_info(get_type_name(), "New ciphertext requested", UVM_MEDIUM)
                 if (key_state == NOT_READY)
                     `uvm_fatal(get_type_name(), "Key not expanded but new ciphertext was requested: Illegal request. Simulation aborted");
                 repeat (item.next_val_req_delay) @(posedge DUT_vif.clk);
+                #1;
                 DUT_vif.data_in = item.data_in;
                 DUT_vif.next_val_req = item.next_val_req;
                 repeat (item.next_val_req_pulse) @(posedge DUT_vif.clk);
+                #1;
                 DUT_vif.next_val_req = 0;
                 // TODO: it's legal to get request for new key expansion while encrypting
                 // encryption should be aborted in that case
-                // TODO: it's also valid to get request for new ciphertext while encrypting
-                // current encryption should be aborted in that case
-                fork: fork_encryption
-                    begin
-                        repeat (ENC_TIMEOUT_CLOCKS) @(posedge DUT_vif.clk);
-                        `uvm_fatal(get_type_name(), "Encryption timeout. Simulation aborted");
-                    end
-                    begin
-                        @(posedge DUT_vif.enc_done);
-                    end
-                join_any: fork_encryption
-                disable fork_encryption;
-                #1;
+                if (item.wait_for_enc_done == TRUE) begin
+                    fork: fork_encryption
+                        begin
+                            repeat (ENC_TIMEOUT_CLOCKS) @(posedge DUT_vif.clk);
+                            `uvm_fatal(get_type_name(), "Encryption timeout. Simulation aborted");
+                        end
+                        begin
+                            @(posedge DUT_vif.enc_done);
+                        end
+                    join_any: fork_encryption
+                    disable fork_encryption;
+                    #1;
+                end
+                else begin
+                    `uvm_info(get_type_name(), "Encryption not waited for", UVM_MEDIUM)
+                end
             end
             else begin
                 `uvm_info(get_type_name(), $sformatf("Inactive sequence item"), UVM_HIGH)
@@ -77,6 +86,7 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                 DUT_vif.data_in = item.data_in;
                 DUT_vif.master_key = item.master_key;
                 @(posedge DUT_vif.clk);
+                #1;
             end
             seq_item_port.item_done();
         end

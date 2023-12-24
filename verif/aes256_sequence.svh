@@ -27,7 +27,7 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
         int pt_cnt = 0;
 
         for (key_cnt = 0; key_cnt < number_of_keys; key_cnt++) begin
-            `uvm_info(get_type_name(), $sformatf("key counter: %0d", key_cnt), UVM_LOW)
+            `uvm_info(get_type_name(), $sformatf("Master Key counter: %0d", key_cnt), UVM_MEDIUM)
             item = aes256_seq_item::type_id::create($sformatf("item_%0d_%0d", key_cnt, pt_cnt));
             item.key_expand_start = 1;
             item.next_val_req = 0;
@@ -35,7 +35,7 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
                                         key_expand_start_delay >= 10; })
             
             for (pt_cnt = 0; pt_cnt < number_of_plaintexts; pt_cnt++) begin
-                `uvm_info(get_type_name(), $sformatf("plaintext counter: %0d", pt_cnt), UVM_LOW)
+                `uvm_info(get_type_name(), $sformatf("Plaintext counter: %0d", pt_cnt), UVM_MEDIUM)
                 item.key_expand_start = 0;
                 item.next_val_req = 1;
                 // pipleline the requests with no delay
@@ -46,7 +46,7 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
         item.key_expand_start = 0;
         item.next_val_req = 0;
         repeat (wait_period_at_the_end) begin
-            `SEND_ITEM(item, 1'b0);
+            `SEND_ITEM(item, 0);
         end
 
     endtask: body

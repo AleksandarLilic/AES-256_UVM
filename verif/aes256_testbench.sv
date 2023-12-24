@@ -13,7 +13,6 @@ aes256_loading_wrap DUT_aes256_loading_wrap_i(
 );
 
 initial begin
-    `uvm_info("clock", "clock gen block start", UVM_LOW)
     $timeformat(-9, 0, " ns", 20);
     DUT_aes256_if_i.clk = 0;
     forever begin

@@ -23,7 +23,7 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
         forever begin
             seq_item_port.get_next_item(item);
             if (item.key_expand_start == 1) begin
-                `uvm_info(get_type_name(), $sformatf("key_expand_start: %0d", item.key_expand_start), UVM_HIGH)
+                `uvm_info(get_type_name(), "Key expansion started", UVM_HIGH)
                 key_state = NOT_READY;
                 repeat (item.key_expand_start_delay) @(posedge DUT_vif.clk);
                 DUT_vif.master_key = item.master_key;
@@ -46,7 +46,7 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                 end
             end
             else if (item.next_val_req == 1) begin
-                `uvm_info(get_type_name(), $sformatf("next_val_req: %0d", item.next_val_req), UVM_HIGH)
+                `uvm_info(get_type_name(), "New ciphertext requested", UVM_HIGH)
                 if (key_state == NOT_READY)
                     `uvm_fatal(get_type_name(), "Key not expanded but new ciphertext was requested: Illegal request. Simulation aborted");
                 repeat (item.next_val_req_delay) @(posedge DUT_vif.clk);

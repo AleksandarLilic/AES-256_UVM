@@ -6,9 +6,10 @@ typedef enum {NOT_READY, EXPANDED} key_state_t;
 typedef enum {FALSE, TRUE} bool_t;
 
 // Macros
-`define SEND_ITEM(item) \
+`define SEND_ITEM(item, print) \
     start_item(item); \
-    `uvm_info(get_type_name(), $sformatf("\n%s", item.sprint()), UVM_MEDIUM); \
+    if (print) \
+        `uvm_info(get_type_name(), $sformatf("\n%s", item.sprint()), UVM_MEDIUM); \
     finish_item(item);
 
 `define SEND_ITEM_RAND(item) \

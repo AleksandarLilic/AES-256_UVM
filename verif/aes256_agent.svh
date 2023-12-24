@@ -3,12 +3,12 @@ import uvm_pkg::*;
 `include "aes256_seq_item.svh"
 `include "aes256_sequence.svh"
 `include "aes256_driver.svh"
-//`include "aes256_monitor.svh"
+`include "aes256_monitor.svh"
 
 class aes256_agent extends uvm_agent;
     `uvm_component_utils(aes256_agent)
     aes256_driver driver_1;
-    //aes256_monitor monitor;
+    aes256_monitor monitor_1;
     uvm_sequencer#(aes256_seq_item) sequencer_1;
 
     function new (string name = "aes256_agent", uvm_component parent = null);
@@ -18,7 +18,7 @@ class aes256_agent extends uvm_agent;
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
         driver_1 = aes256_driver::type_id::create("driver_1", this);
-        //monitor = aes256_monitor::type_id::create("monitor", this);
+        monitor_1 = aes256_monitor::type_id::create("monitor_1", this);
         sequencer_1 = uvm_sequencer#(aes256_seq_item)::type_id::create("sequencer_1", this);
     endfunction
 

@@ -3,11 +3,14 @@ import uvm_pkg::*;
 
 class aes256_seq_item extends uvm_sequence_item;
     const byte unsigned LOADING_CYCLES = 8;
-    // design I/O
+    // design inputs
     bit key_expand_start = 0;
     rand bit [255:0] master_key = 0;
     bit next_val_req = 0;
     rand bit [127:0] data_in = 0;
+    // design outputs
+    bit next_val_ready;
+    bit [15:0] [7:0] data_out;
     // timing relationships
     rand byte unsigned key_expand_start_pulse;
     rand byte unsigned key_expand_start_delay;
@@ -16,10 +19,15 @@ class aes256_seq_item extends uvm_sequence_item;
     rand bool_t wait_for_key_ready = TRUE;
     
     `uvm_object_utils_begin(aes256_seq_item)
+        // design inputs
         `uvm_field_int(key_expand_start, UVM_DEFAULT | UVM_BIN)
         `uvm_field_int(master_key, UVM_DEFAULT)
         `uvm_field_int(next_val_req, UVM_DEFAULT | UVM_BIN)
         `uvm_field_int(data_in, UVM_DEFAULT)
+        // design outputs
+        `uvm_field_int(next_val_ready, UVM_DEFAULT | UVM_BIN)
+        `uvm_field_int(data_out, UVM_DEFAULT)
+        // timing relationships
         `uvm_field_int(key_expand_start_pulse, UVM_DEFAULT | UVM_UNSIGNED)
         `uvm_field_int(key_expand_start_delay, UVM_DEFAULT | UVM_UNSIGNED)
         `uvm_field_int(next_val_req_pulse, UVM_DEFAULT | UVM_UNSIGNED)

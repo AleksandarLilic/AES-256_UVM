@@ -46,7 +46,7 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
         item.key_expand_start = 0;
         item.next_val_req = 0;
         repeat (wait_period_at_the_end) begin
-            `SEND_ITEM(item);
+            `SEND_ITEM(item, 1'b0);
         end
 
     endtask: body

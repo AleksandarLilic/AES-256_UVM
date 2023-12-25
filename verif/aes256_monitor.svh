@@ -3,6 +3,7 @@ import uvm_pkg::*;
 
 class aes256_monitor extends uvm_monitor;
     `uvm_component_utils(aes256_monitor)
+
     virtual aes256_if DUT_vif;
     aes256_seq_item item;
     aes256_seq_item item_loading;
@@ -45,6 +46,7 @@ class aes256_monitor extends uvm_monitor;
 
     task run_phase(uvm_phase phase);
         item = aes256_seq_item::type_id::create("item");
+        
         fork: exp_enc_loading
             forever begin: key_expansion
                 // fork, as current key expansion can be interrupted by new key expansion request
@@ -68,6 +70,23 @@ class aes256_monitor extends uvm_monitor;
                 end
             end: key_expansion
 
+            forever begin: timeout_check_exp
+                @(posedge exp_started);
+                fork: fork_key_expansion
+                    begin // timeout
+                        repeat (KEY_EXP_TIMEOUT_CLOCKS) @(posedge DUT_vif.clk);
+                        `uvm_fatal(get_type_name(), "Key expansion timeout. Simulation aborted");
+                    end
+                    begin // key expansion finished
+                        @(posedge DUT_vif.key_ready);
+                    end
+                    begin // new key expansion requested, so previous one is aborted
+                        @(posedge DUT_vif.key_expand_start);
+                    end
+                join_any: fork_key_expansion
+                disable fork_key_expansion;
+            end: timeout_check_exp
+
             forever begin: encryption
                 fork: enc_progress
                     begin // this side of the fork is not relevant the first time it runs (i.e. when encryption was not yet requested)
@@ -88,13 +107,40 @@ class aes256_monitor extends uvm_monitor;
                 end
             end: encryption
 
+            forever begin: timing_check_enc
+                @(posedge enc_started);
+                fork: fork_encryption
+                    begin // timeout
+                        repeat (ENC_TIMEOUT_CLOCKS) @(posedge DUT_vif.clk);
+                        `uvm_fatal(get_type_name(), "Encryption timeout. Simulation aborted");
+                    end
+                    begin // encryption finished
+                        @(posedge DUT_vif.enc_done);
+                    end
+                    begin // new encryption requested, so previous one is aborted
+                        @(posedge DUT_vif.next_val_req);
+                    end
+                    begin // key expansion requested, so previous encryption is aborted
+                        @(posedge DUT_vif.key_expand_start);
+                    end
+                join_any: fork_encryption
+                disable fork_encryption;
+            end: timing_check_enc
+
+            forever begin: protocol_checks
+                if (DUT_vif.next_val_req == 1 && DUT_vif.key_expand_start == 1) 
+                    `uvm_fatal({get_type_name(), ":protocol_checks"}, "New ciphertext and new expansion requested at the same time. Invalid request. Simulation aborted");
+                if (DUT_vif.next_val_req == 1 && DUT_vif.key_ready == 0) 
+                    `uvm_fatal({get_type_name(), ":key_expansion"}, "New ciphertext requested but the key has not been expanded yet. Invalid request. Simulation aborted");
+                @(posedge DUT_vif.clk); #1;
+            end: protocol_checks
+
             forever begin: loading
                 @(posedge DUT_vif.enc_done);
                 `uvm_info({get_type_name(), ":loading"}, "Encryption finished. Expecting new data packets in the next clock cycle", UVM_HIGH)
                 item_loading = aes256_seq_item::type_id::create("item_loading");
                 item_loading.copy(item);
-                // TODO: add cycle count, throw warning if exceeded
-                // still throw error if 2x exceeded
+
                 fork: wait_for_new_data
                     begin
                         repeat (3) @(posedge DUT_vif.clk);
@@ -109,14 +155,19 @@ class aes256_monitor extends uvm_monitor;
                 data_out_cnt = 0;
                 while (DUT_vif.next_val_ready == 1) begin
                     `uvm_info({get_type_name(), ":loading"}, $sformatf("loading data: %0h, at %0d", DUT_vif.data_out, data_out_cnt), UVM_HIGH)
-                    if (data_out_cnt > 15) `uvm_fatal({get_type_name(), ":loading"}, "Too many data packets received. Simulation aborted");
-                    collect_outputs(item_loading, 15-data_out_cnt); // MSB arrives first
+                    if (data_out_cnt > LOADING_CYCLES - 1) 
+                        `uvm_fatal({get_type_name(), ":loading"}, "Too many data packets received. Simulation aborted");
+                    collect_outputs(item_loading, LOADING_CYCLES - 1 - data_out_cnt); // MSB arrives first
                     data_out_cnt++;
                     @(posedge DUT_vif.clk);
                     #1;
                 end
+                if (data_out_cnt < LOADING_CYCLES - 1) 
+                    `uvm_fatal({get_type_name(), ":loading"}, $sformatf("Too few data packets received. Expected: %0d, received: %0d. Simulation aborted", LOADING_CYCLES - 1, data_out_cnt));
+                
                 `uvm_info({get_type_name(), ":loading"}, $sformatf("Received ciphertext %0d\n%s", ciphertext_cnt, item_loading.sprint()), UVM_MEDIUM);
                 ciphertext_cnt++;
+
             end: loading
         join_none: exp_enc_loading
     endtask

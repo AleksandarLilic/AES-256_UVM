@@ -2,7 +2,6 @@ import uvm_pkg::*;
 `include "aes256_inc.svh"
 
 class aes256_seq_item extends uvm_sequence_item;
-    const byte unsigned LOADING_CYCLES = 8;
     // design inputs
     bit key_expand_start = 0;
     rand bit [255:0] master_key = 0;
@@ -47,7 +46,7 @@ class aes256_seq_item extends uvm_sequence_item;
     }
     constraint c_next_val_req_delay {
         next_val_req_delay >= 0;
-        next_val_req_delay <= 2*LOADING_CYCLES;
+        next_val_req_delay <= LOADING_CYCLES + LOADING_CYCLES>>1;
     }
     constraint c_next_val_req_pulse {
         next_val_req_pulse >= 1;

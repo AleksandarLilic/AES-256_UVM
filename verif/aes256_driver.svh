@@ -4,9 +4,6 @@ import uvm_pkg::*;
 class aes256_driver extends uvm_driver #(aes256_seq_item);
     `uvm_component_utils(aes256_driver)
     virtual aes256_if DUT_vif;
-    key_state_t key_state = NOT_READY;
-    const shortint unsigned KEY_EXP_TIMEOUT_CLOCKS = 86; // takes 84 clocks to expand one key
-    const shortint unsigned ENC_TIMEOUT_CLOCKS = 60; // takes 58 clocks to encrypt one plaintext block
 
     function new (string name = "aes256_driver", uvm_component parent = null);
         super.new(name, parent);
@@ -24,60 +21,31 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
             seq_item_port.get_next_item(item);
             if (item.key_expand_start == 1) begin
                 `uvm_info(get_type_name(), "Key expansion started", UVM_MEDIUM)
-                key_state = NOT_READY;
                 repeat (item.key_expand_start_delay) @(posedge DUT_vif.clk);
                 #1;
+                // seqeunce to start key expansion: begin
                 DUT_vif.master_key = item.master_key;
                 DUT_vif.key_expand_start = item.key_expand_start;
                 repeat (item.key_expand_start_pulse) @(posedge DUT_vif.clk);
-                #1; // FIXME: why is this delay needed for exp to start properly but not for enc?
+                #1;
                 DUT_vif.key_expand_start = 0;
-                if (item.wait_for_key_ready == TRUE) begin
-                    fork: fork_key_expansion
-                        begin
-                            repeat (KEY_EXP_TIMEOUT_CLOCKS) @(posedge DUT_vif.clk);
-                            `uvm_fatal(get_type_name(), "Key expansion timeout. Simulation aborted");
-                        end
-                        begin
-                            @(posedge DUT_vif.key_ready);
-                            key_state = EXPANDED;
-                        end 
-                    join_any: fork_key_expansion
-                    disable fork_key_expansion;
-                end
-                else begin
-                    `uvm_info(get_type_name(), "Key expansion not waited for", UVM_MEDIUM)
-                end
+                // seqeunce to start key expansion: end
+                if (item.wait_for_key_ready == TRUE) @(posedge DUT_vif.key_ready);
+                else `uvm_info(get_type_name(), "Key expansion not waited for", UVM_MEDIUM)
             end
             else if (item.next_val_req == 1) begin
                 `uvm_info(get_type_name(), "New ciphertext requested", UVM_MEDIUM)
-                if (key_state == NOT_READY)
-                    `uvm_fatal(get_type_name(), "Key not expanded but new ciphertext was requested: Illegal request. Simulation aborted");
                 repeat (item.next_val_req_delay) @(posedge DUT_vif.clk);
                 #1;
+                // seqeunce to start encryption: begin
                 DUT_vif.data_in = item.data_in;
                 DUT_vif.next_val_req = item.next_val_req;
                 repeat (item.next_val_req_pulse) @(posedge DUT_vif.clk);
                 #1;
                 DUT_vif.next_val_req = 0;
-                // TODO: it's legal to get request for new key expansion while encrypting
-                // encryption should be aborted in that case
-                if (item.wait_for_enc_done == TRUE) begin
-                    fork: fork_encryption
-                        begin
-                            repeat (ENC_TIMEOUT_CLOCKS) @(posedge DUT_vif.clk);
-                            `uvm_fatal(get_type_name(), "Encryption timeout. Simulation aborted");
-                        end
-                        begin
-                            @(posedge DUT_vif.enc_done);
-                        end
-                    join_any: fork_encryption
-                    disable fork_encryption;
-                    #1;
-                end
-                else begin
-                    `uvm_info(get_type_name(), "Encryption not waited for", UVM_MEDIUM)
-                end
+                // seqeunce to start encryption: end
+                if (item.wait_for_enc_done == TRUE) @(posedge DUT_vif.enc_done);
+                else `uvm_info(get_type_name(), "Encryption not waited for", UVM_MEDIUM)
             end
             else begin
                 `uvm_info(get_type_name(), $sformatf("Inactive sequence item"), UVM_HIGH)

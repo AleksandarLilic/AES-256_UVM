@@ -9,8 +9,8 @@ const shortint unsigned KEY_EXP_TIMEOUT_CLOCKS = KEY_EXP_CYCLES + 2;
 const shortint unsigned ENC_TIMEOUT_CLOCKS = ENC_CYCLES + 2; 
 
 // Enums
-typedef enum {NOT_READY, EXPANDED} key_state_t;
-typedef enum {FALSE, TRUE} bool_t;
+typedef enum bit { FALSE = 0, TRUE = 1 } bool_t;
+typedef enum bit { UVM_PASSIVE = 0, UVM_ACTIVE = 1 } uvm_active_passive_enum;
 
 // Macros
 `define SEND_ITEM(item, print) \

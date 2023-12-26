@@ -35,8 +35,10 @@ class aes256_test extends uvm_test;
             number_of_keys == 5;
             number_of_plaintexts == 0;
             wait_for_key_ready == FALSE;
+            exp_delay_mode == EXP_WITH_DELAY;
             wait_period_at_the_end == 0;
-        });
+        })
+        else `uvm_error(get_type_name(), "Randomization failed");
         seq.start(env.agent_1.sequencer_1);
 
         // test that encryption can be interrupted by new key request
@@ -45,19 +47,51 @@ class aes256_test extends uvm_test;
             number_of_keys == 1;
             number_of_plaintexts == 5;
             wait_for_key_ready == TRUE;
+            exp_delay_mode == EXP_NO_DELAY;
             wait_for_enc_done == FALSE;
+            enc_delay_mode == ENC_WITH_DELAY;
             wait_period_at_the_end == 0;
-        });
+        })
+        else `uvm_error(get_type_name(), "Randomization failed");
         seq.start(env.agent_1.sequencer_1);
         
-        // test simple scenario with key expansion and encryption
+        // test simple scenario with key expansion and encryption and overlap
         assert(seq.randomize() with {
             number_of_keys == 1;
-            number_of_plaintexts == 5;
+            number_of_plaintexts == 10;
             wait_for_key_ready == TRUE;
+            exp_delay_mode == EXP_NO_DELAY;
             wait_for_enc_done == TRUE;
+            enc_delay_mode == ENC_OVERLAP_W_LOADING;
             wait_period_at_the_end == 20;
-        });
+        })
+        else `uvm_error(get_type_name(), "Randomization failed");
+        seq.start(env.agent_1.sequencer_1);
+
+        // test simple scenario with key expansion and encryption and no overlap
+        assert(seq.randomize() with {
+            number_of_keys == 1;
+            number_of_plaintexts == 10;
+            wait_for_key_ready == TRUE;
+            exp_delay_mode == EXP_NO_DELAY;
+            wait_for_enc_done == TRUE;
+            enc_delay_mode == ENC_WAIT_FOR_LOADING_END;
+            wait_period_at_the_end == 20;
+        })
+        else `uvm_error(get_type_name(), "Randomization failed");
+        seq.start(env.agent_1.sequencer_1);
+
+        // test simple scenario with key expansion and encryption max throughput
+        assert(seq.randomize() with {
+            number_of_keys == 1;
+            number_of_plaintexts == 10;
+            wait_for_key_ready == TRUE;
+            exp_delay_mode == EXP_NO_DELAY;
+            wait_for_enc_done == TRUE;
+            enc_delay_mode == ENC_NO_DELAY;
+            wait_period_at_the_end == 20;
+        })
+        else `uvm_error(get_type_name(), "Randomization failed");
         seq.start(env.agent_1.sequencer_1);
         
         phase.drop_objection(this);

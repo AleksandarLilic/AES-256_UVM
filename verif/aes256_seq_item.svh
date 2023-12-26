@@ -15,8 +15,8 @@ class aes256_seq_item extends uvm_sequence_item;
     rand byte unsigned key_expand_start_delay;
     rand byte unsigned next_val_req_pulse;
     rand byte unsigned next_val_req_delay;
-    rand bool_t wait_for_key_ready = TRUE;
-    rand bool_t wait_for_enc_done = TRUE;
+    bool_t wait_for_key_ready = TRUE;
+    bool_t wait_for_enc_done = TRUE;
     
     `uvm_object_utils_begin(aes256_seq_item)
         // design inputs
@@ -36,22 +36,10 @@ class aes256_seq_item extends uvm_sequence_item;
         `uvm_field_enum(bool_t, wait_for_enc_done, UVM_DEFAULT)
     `uvm_object_utils_end
 
-    constraint c_key_expand_start_delay {
-        key_expand_start_delay >= 0;
-        key_expand_start_delay <= 50;
-    }
-    constraint c_key_expand_start_pulse {
-        key_expand_start_pulse >= 1;
-        key_expand_start_pulse <= 10;
-    }
-    constraint c_next_val_req_delay {
-        next_val_req_delay >= 0;
-        next_val_req_delay <= LOADING_CYCLES + LOADING_CYCLES>>1;
-    }
-    constraint c_next_val_req_pulse {
-        next_val_req_pulse >= 1;
-        next_val_req_pulse <= 10;
-    }
+    constraint c_key_expand_start_delay { key_expand_start_delay inside { [0:32] }; }
+    constraint c_key_expand_start_pulse { key_expand_start_pulse inside { [1:8] }; }
+    constraint c_next_val_req_delay { next_val_req_delay inside { [0:2*LOADING_CYCLES] }; }
+    constraint c_next_val_req_pulse { next_val_req_pulse inside { [1:8] }; }
     
     function new (string name = "aes256_seq_item");
         super.new(name);

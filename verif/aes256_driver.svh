@@ -32,8 +32,7 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                 // seqeunce to start key expansion: end
                 if (item.wait_for_key_ready == TRUE) @(posedge DUT_vif.key_ready);
                 else `uvm_info(get_type_name(), "Key expansion not waited for", UVM_MEDIUM)
-            end
-            else if (item.next_val_req == 1) begin
+            end else if (item.next_val_req == 1) begin
                 `uvm_info(get_type_name(), "New ciphertext requested", UVM_MEDIUM)
                 repeat (item.next_val_req_delay) @(posedge DUT_vif.clk);
                 #1;
@@ -46,8 +45,7 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
                 // seqeunce to start encryption: end
                 if (item.wait_for_enc_done == TRUE) @(posedge DUT_vif.enc_done);
                 else `uvm_info(get_type_name(), "Encryption not waited for", UVM_MEDIUM)
-            end
-            else begin
+            end else begin
                 `uvm_info(get_type_name(), $sformatf("Inactive sequence item"), UVM_HIGH)
                 DUT_vif.next_val_req = item.next_val_req;
                 DUT_vif.key_expand_start = item.key_expand_start;

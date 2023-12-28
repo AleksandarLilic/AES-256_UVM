@@ -7,6 +7,7 @@ class aes256_test extends uvm_test;
     aes256_cfg cfg;
     aes256_env env;
     bit check_regular_operation = 1'b0;
+    bit check_interrupts = 1'b0;
 
     function new (string name = "aes256_test", uvm_component parent = null);
         super.new(name, parent);
@@ -29,33 +30,20 @@ class aes256_test extends uvm_test;
         phase.raise_objection(this);
         #10;
         seq = aes256_sequence::type_id::create("seq");
-        
-        // test that key generation can be interrupted by new key request
-        // and continue after new request
+
+        // test scenario with key expansion and encryption max throughput
         assert(seq.randomize() with {
-            number_of_keys == 5;
-            number_of_plaintexts == 0;
-            wait_for_key_ready == FALSE;
-            exp_delay_mode == EXP_WITH_DELAY;
-            wait_period_at_the_end == 0;
+            number_of_keys == 1;
+            number_of_plaintexts == 10;
+            wait_for_key_ready == TRUE;
+            exp_delay_mode == EXP_NO_DELAY;
+            wait_for_enc_done == TRUE;
+            enc_delay_mode == ENC_NO_DELAY;
+            wait_period_at_the_end == 20;
         })
         else `uvm_error(get_type_name(), "Randomization failed");
         seq.start(env.agent_1.sequencer_1);
 
-        // test that encryption can be interrupted by new key request
-        // and continue after new request
-        assert(seq.randomize() with {
-            number_of_keys == 1;
-            number_of_plaintexts == 5;
-            wait_for_key_ready == TRUE;
-            exp_delay_mode == EXP_NO_DELAY;
-            wait_for_enc_done == FALSE;
-            enc_delay_mode == ENC_WITH_DELAY;
-            wait_period_at_the_end == 0;
-        })
-        else `uvm_error(get_type_name(), "Randomization failed");
-        seq.start(env.agent_1.sequencer_1);
-        
         if (check_regular_operation == 1'b1) begin
             // test scenario with key expansion and encryption and overlap
             assert(seq.randomize() with {
@@ -82,11 +70,51 @@ class aes256_test extends uvm_test;
             })
             else `uvm_error(get_type_name(), "Randomization failed");
             seq.start(env.agent_1.sequencer_1);
+        end
 
-            // test scenario with key expansion and encryption max throughput
+        if (check_interrupts == 1'b1) begin
+            // test that key generation can be interrupted by new key request
+            // and continue after new request
+            assert(seq.randomize() with {
+                number_of_keys == 5;
+                number_of_plaintexts == 0;
+                wait_for_key_ready == FALSE;
+                exp_delay_mode == EXP_WITH_DELAY;
+                wait_period_at_the_end == 0;
+            })
+            else `uvm_error(get_type_name(), "Randomization failed");
+            seq.start(env.agent_1.sequencer_1);
+
+            // test that encryption can be interrupted by new key request
+            // and continue after new request
             assert(seq.randomize() with {
                 number_of_keys == 1;
-                number_of_plaintexts == 10;
+                number_of_plaintexts == 5;
+                wait_for_key_ready == TRUE;
+                exp_delay_mode == EXP_NO_DELAY;
+                wait_for_enc_done == FALSE;
+                enc_delay_mode == ENC_WITH_DELAY;
+                wait_period_at_the_end == 0;
+            })
+            else `uvm_error(get_type_name(), "Randomization failed");
+            seq.start(env.agent_1.sequencer_1);
+
+            // test scenario where loading is interrupted by new key expansion
+            assert(seq.randomize() with {
+                number_of_keys == 1;
+                number_of_plaintexts == 2;
+                wait_for_key_ready == TRUE;
+                exp_delay_mode == EXP_NO_DELAY;
+                wait_for_enc_done == TRUE;
+                enc_delay_mode == ENC_NO_DELAY;
+                wait_period_at_the_end == 0;
+            })
+            else `uvm_error(get_type_name(), "Randomization failed");
+            seq.start(env.agent_1.sequencer_1);
+            
+            assert(seq.randomize() with {
+                number_of_keys == 1;
+                number_of_plaintexts == 2;
                 wait_for_key_ready == TRUE;
                 exp_delay_mode == EXP_NO_DELAY;
                 wait_for_enc_done == TRUE;
@@ -97,31 +125,6 @@ class aes256_test extends uvm_test;
             seq.start(env.agent_1.sequencer_1);
         end
 
-        // test scenario where loading is interrupted by new key expansion
-        assert(seq.randomize() with {
-            number_of_keys == 1;
-            number_of_plaintexts == 2;
-            wait_for_key_ready == TRUE;
-            exp_delay_mode == EXP_NO_DELAY;
-            wait_for_enc_done == TRUE;
-            enc_delay_mode == ENC_NO_DELAY;
-            wait_period_at_the_end == 0;
-        })
-        else `uvm_error(get_type_name(), "Randomization failed");
-        seq.start(env.agent_1.sequencer_1);
-        
-        assert(seq.randomize() with {
-            number_of_keys == 1;
-            number_of_plaintexts == 2;
-            wait_for_key_ready == TRUE;
-            exp_delay_mode == EXP_NO_DELAY;
-            wait_for_enc_done == TRUE;
-            enc_delay_mode == ENC_NO_DELAY;
-            wait_period_at_the_end == 20;
-        })
-        else `uvm_error(get_type_name(), "Randomization failed");
-        seq.start(env.agent_1.sequencer_1);
-        
         phase.drop_objection(this);
     endtask: run_phase
     

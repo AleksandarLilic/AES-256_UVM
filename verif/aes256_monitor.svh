@@ -4,6 +4,7 @@ import uvm_pkg::*;
 class aes256_monitor extends uvm_monitor;
     `uvm_component_utils(aes256_monitor)
 
+    uvm_analysis_port#(aes256_seq_item) item_ap;
     virtual aes256_if DUT_vif;
     aes256_seq_item item;
     aes256_seq_item item_loading;
@@ -13,8 +14,9 @@ class aes256_monitor extends uvm_monitor;
     int unsigned ciphertext_cnt = 0;
     bit loading_interrupted = 1'b0;
 
-    function new (string name = "aes256_monitor", uvm_component parent = null);
+    function new(string name = "aes256_monitor", uvm_component parent = null);
         super.new(name, parent);
+        item_ap = new("item_ap", this);
     endfunction
 
     function void build_phase(uvm_phase phase);
@@ -175,8 +177,10 @@ class aes256_monitor extends uvm_monitor;
                 if (data_out_cnt < LOADING_CYCLES - 1 && loading_interrupted == 'b0)
                     `uvm_fatal({get_type_name(), ":loading"}, $sformatf("Too few data packets received but loading was not interrupted. Expected: %0d, received: %0d. Simulation aborted", LOADING_CYCLES - 1, data_out_cnt));
                 
+                // print packet and send it to the analysis port
                 `uvm_info({get_type_name(), ":loading"}, $sformatf("Received ciphertext %0d\n%s", ciphertext_cnt, item_loading.sprint()), UVM_MEDIUM);
                 ciphertext_cnt++;
+                item_ap.write(item_loading);
             end: loading
 
             begin: key_expansion_interrupt

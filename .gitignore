@@ -7,3 +7,10 @@
 *.wcfg
 *.swp
 local/
+# Vivado files
+xsim.dir/
+xsim*
+xelab*
+xvhdl*
+xvlog*
+xsc*

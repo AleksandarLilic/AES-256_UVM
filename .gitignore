@@ -1,3 +1,7 @@
+*.swp
+local/
+
+# Vivado files
 *.cache
 *.hw
 *.ip_user_files
@@ -5,12 +9,13 @@
 *.sim
 *.xpr
 *.wcfg
-*.swp
-local/
-# Vivado files
 xsim.dir/
 xsim*
 xelab*
 xvhdl*
 xvlog*
 xsc*
+vivado.*
+
+# VSCode files
+.vscode/

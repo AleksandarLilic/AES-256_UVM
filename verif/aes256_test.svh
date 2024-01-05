@@ -34,7 +34,7 @@ class aes256_test extends uvm_test;
         // test scenario with key expansion and encryption max throughput
         assert(seq.randomize() with {
             number_of_keys == 1;
-            number_of_plaintexts == 10;
+            number_of_plaintexts == 100;
             wait_for_key_ready == TRUE;
             exp_delay_mode == EXP_NO_DELAY;
             wait_for_enc_done == TRUE;

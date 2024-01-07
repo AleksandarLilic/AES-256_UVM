@@ -3,8 +3,9 @@ module aes256_loading_wrap(
     aes256_if aes256_if_conn
 );
 
-aes256_loading DUT_aes256_loading_i(
+aes256_loading aes256_loading_i(
     .clk(aes256_if_conn.clk),
+    .rst(aes256_if_conn.rst),
     .pi_key_expand_start(aes256_if_conn.key_expand_start),
     .pi_master_key(aes256_if_conn.master_key),
     .po_key_ready(aes256_if_conn.key_ready),
@@ -14,10 +15,12 @@ aes256_loading DUT_aes256_loading_i(
     .po_next_val_ready(aes256_if_conn.next_val_ready),
     .po_data(aes256_if_conn.data_out)
 );
+
 endmodule: aes256_loading_wrap
 
 interface aes256_if;
     logic clk;
+    logic rst;
     logic key_expand_start;
     logic [255:0] master_key;
     logic key_ready;

@@ -38,9 +38,9 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
                 EXP_NO_DELAY: rnd_status = item.randomize() with { key_expand_start_delay == 1; key_expand_start_pulse == 1; };
                 EXP_WITH_DELAY: rnd_status = item.randomize() with { key_expand_start_delay > 1; };
                 EXP_RANDOM: rnd_status = item.randomize();
-                default: `uvm_error(get_type_name(), "Unknown delay mode")
+                default: `uvm_fatal(get_type_name(), "Unknown delay mode")
             endcase
-            assert(rnd_status) else `uvm_error(get_type_name(), "Randomization failed")
+            assert(rnd_status) else `uvm_fatal(get_type_name(), "Randomization failed")
             `SEND_ITEM(item, 0);
             
             for (pt_cnt = 0; pt_cnt < number_of_plaintexts; pt_cnt++) begin
@@ -55,9 +55,9 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
                     ENC_OVERLAP_W_LOADING: rnd_status = item.randomize() with { next_val_req_delay inside {[1:LOADING_CYCLES]}; };
                     ENC_WAIT_FOR_LOADING_END: rnd_status = item.randomize() with { next_val_req_delay > LOADING_CYCLES; };
                     ENC_RANDOM: rnd_status = item.randomize();
-                    default: `uvm_error(get_type_name(), "Unknown delay mode")
+                    default: `uvm_fatal(get_type_name(), "Unknown delay mode")
                 endcase
-                assert(rnd_status) else `uvm_error(get_type_name(), "Randomization failed")
+                assert(rnd_status) else `uvm_fatal(get_type_name(), "Randomization failed")
                 `SEND_ITEM(item, 0);
             end
         end

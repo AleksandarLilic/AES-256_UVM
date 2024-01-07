@@ -42,7 +42,7 @@ class aes256_test extends uvm_test;
             enc_delay_mode == ENC_NO_DELAY;
             wait_period_at_the_end == 20;
         })
-        else `uvm_error(get_type_name(), "Randomization failed");
+        else `uvm_fatal(get_type_name(), "Randomization failed");
         seq.start(env.agent_1.sequencer_1);
 
         if (check_regular_operation == 1'b1) begin
@@ -56,7 +56,7 @@ class aes256_test extends uvm_test;
                 enc_delay_mode == ENC_OVERLAP_W_LOADING;
                 wait_period_at_the_end == 20;
             })
-            else `uvm_error(get_type_name(), "Randomization failed");
+            else `uvm_fatal(get_type_name(), "Randomization failed");
             seq.start(env.agent_1.sequencer_1);
 
             // test scenario with key expansion and encryption and no overlap
@@ -69,7 +69,7 @@ class aes256_test extends uvm_test;
                 enc_delay_mode == ENC_WAIT_FOR_LOADING_END;
                 wait_period_at_the_end == 20;
             })
-            else `uvm_error(get_type_name(), "Randomization failed");
+            else `uvm_fatal(get_type_name(), "Randomization failed");
             seq.start(env.agent_1.sequencer_1);
         end
 
@@ -83,7 +83,7 @@ class aes256_test extends uvm_test;
                 exp_delay_mode == EXP_WITH_DELAY;
                 wait_period_at_the_end == 0;
             })
-            else `uvm_error(get_type_name(), "Randomization failed");
+            else `uvm_fatal(get_type_name(), "Randomization failed");
             seq.start(env.agent_1.sequencer_1);
 
             // test that encryption can be interrupted by new key request
@@ -97,7 +97,7 @@ class aes256_test extends uvm_test;
                 enc_delay_mode == ENC_WITH_DELAY;
                 wait_period_at_the_end == 0;
             })
-            else `uvm_error(get_type_name(), "Randomization failed");
+            else `uvm_fatal(get_type_name(), "Randomization failed");
             seq.start(env.agent_1.sequencer_1);
 
             // test scenario where loading is interrupted by new key expansion
@@ -110,7 +110,7 @@ class aes256_test extends uvm_test;
                 enc_delay_mode == ENC_NO_DELAY;
                 wait_period_at_the_end == 0;
             })
-            else `uvm_error(get_type_name(), "Randomization failed");
+            else `uvm_fatal(get_type_name(), "Randomization failed");
             seq.start(env.agent_1.sequencer_1);
             
             assert(seq.randomize() with {
@@ -122,7 +122,7 @@ class aes256_test extends uvm_test;
                 enc_delay_mode == ENC_NO_DELAY;
                 wait_period_at_the_end == 20;
             })
-            else `uvm_error(get_type_name(), "Randomization failed");
+            else `uvm_fatal(get_type_name(), "Randomization failed");
             seq.start(env.agent_1.sequencer_1);
         end
 

@@ -35,14 +35,14 @@ typedef enum bit [2:0] {
 //`define SEND_ITEM_RAND(item) \
 //    start_item(item); \
 //    assert(item.randomize()) \
-//    else `uvm_error(get_type_name(), "Randomization failed"); \
+//    else `uvm_fatal(get_type_name(), "Randomization failed"); \
 //    `uvm_info(get_type_name(), $sformatf("\n%s", item.sprint()), UVM_HIGH); \
 //    finish_item(item);
 //
 //`define SEND_ITEM_RAND_WITH(item, constraint) \
 //    start_item(item); \
 //    assert(item.randomize() with constraint) \
-//    else `uvm_error(get_type_name(), "Randomization failed"); \
+//    else `uvm_fatal(get_type_name(), "Randomization failed"); \
 //    `uvm_info(get_type_name(), $sformatf("\n%s", item.sprint()), UVM_HIGH); \
 //    finish_item(item);
 

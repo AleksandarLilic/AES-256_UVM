@@ -13,8 +13,9 @@ class aes256_scoreboard extends uvm_scoreboard;
     byte unsigned key_bytes[32];
     byte unsigned plaintext_bytes[16];
     byte unsigned ciphertext_bytes[16];
+    bit [127:0] model_data_out;
+    bool_t comparison_pass;
     int unsigned error_count = 0;
-    int unsigned error_count_total = 0;
 
     function new(string name = "aes256_scoreboard", uvm_component parent = null);
         super.new(name, parent);
@@ -31,31 +32,29 @@ class aes256_scoreboard extends uvm_scoreboard;
         
         // run model
         aes_dpi(key_bytes, plaintext_bytes, ciphertext_bytes);
+        for (int i = 0; i < 16; i++) model_data_out[i*8 +: 8] = ciphertext_bytes[15-i];
         
         // compare results
-        error_count = 0;
-        for (int i = 0; i < 16; i++) begin
-            assert(ciphertext_bytes[i] == item.data_out[15-i]) else begin
-                `uvm_error(get_type_name(), $sformatf("Ciphertext byte %0d mismatch: expected %0h, received %0h", i, ciphertext_bytes[i], item.data_out[15-i]))
-                error_count++;
-            end
+        comparison_pass = TRUE;
+        assert (model_data_out == item.data_out) else begin
+            `uvm_error(get_type_name(), $sformatf("Ciphertext mismatch: expected 'h%0h, received 'h%0h", model_data_out, item.data_out))
+            comparison_pass = FALSE;
+            error_count += 1;
         end
         
-        if (error_count == 0) begin
+        if (comparison_pass == TRUE) begin
             `uvm_info(get_type_name(), "Ciphertext matched", UVM_HIGH)
         end else begin
-            `uvm_error(get_type_name(), $sformatf("Ciphertext mismatched %0d bytes", error_count))
             `uvm_info(get_type_name(), $sformatf("Entire packet:\n%s", item.sprint()), UVM_NONE)
         end
-        error_count_total += error_count;
     endfunction
 
     function void report_phase(uvm_phase phase);
         `uvm_info(get_type_name(), $sformatf("Number of items received: %0d", num_items), UVM_NONE)
-        if (error_count_total == 0) begin
+        if (error_count == 0) begin
             `uvm_info(get_type_name(), "\n\n==== PASS ====\n\n", UVM_NONE)
         end else begin
-            `uvm_info(get_type_name(), $sformatf("Total number of errors: %0d", error_count_total), UVM_NONE)
+            `uvm_info(get_type_name(), $sformatf("Total number of errors: %0d", error_count), UVM_NONE)
             `uvm_fatal(get_type_name(), "\n\n==== FAIL ====\n\n")
         end
     endfunction

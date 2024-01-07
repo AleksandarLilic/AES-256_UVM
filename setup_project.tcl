@@ -11,10 +11,10 @@ set_property -name {xsim.compile.tcl.pre} -value {pre_compile.tcl} -objects [get
 set_property -name {xsim.compile.xvlog.more_options} -value {-L uvm} -objects [get_filesets sim_1]
 
 # elaboration
-set_property -name {xsim.elaborate.xelab.more_options} -value {-L uvm -sv_lib aes_dpi.so -R} -objects [get_filesets sim_1]
+set_property -name {xsim.elaborate.xelab.more_options} -value {-L uvm -sv_lib aes_dpi.so} -objects [get_filesets sim_1]
 
 # simulation
-set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_VERBOSITY=UVM_HIGH  -sv_seed 12345} -objects [get_filesets sim_1]
+set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_VERBOSITY=UVM_HIGH -sv_seed 2} -objects [get_filesets sim_1]
 set_property -name {xsim.simulate.runtime} -value {100us} -objects [get_filesets sim_1]
 
 # Use all available threads for compilation and elaboration

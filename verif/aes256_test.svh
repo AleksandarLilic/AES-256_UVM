@@ -20,10 +20,11 @@ class aes256_test extends uvm_test;
         env = aes256_env::type_id::create("env", this);
     endfunction
 
-    function void end_of_elaboration_phase(uvm_phase phase);
-        super.end_of_elaboration_phase(phase);
-        uvm_top.print_topology();
-    endfunction : end_of_elaboration_phase
+    // TODO: move this to "smoke_test", so it only gets executed once
+    //function void end_of_elaboration_phase(uvm_phase phase);
+    //    super.end_of_elaboration_phase(phase);
+    //    uvm_top.print_topology();
+    //endfunction : end_of_elaboration_phase
 
     task run_phase(uvm_phase phase);
         aes256_sequence seq;

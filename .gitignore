@@ -15,7 +15,7 @@ xelab*
 xvhdl*
 xvlog*
 xsc*
-vivado.*
+vivado*
 
 # VSCode files
 .vscode/

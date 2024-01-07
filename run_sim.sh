@@ -24,7 +24,7 @@ if [[ -z $seed ]]; then
     seed=$default_seed
 fi
 
-sim_args="-testplusarg UVM_VERBOSITY=UVM_LOW -testplusarg UVM_TESTNAME=$test_name -sv_seed $seed"
+sim_args="-testplusarg UVM_VERBOSITY=UVM_LOW -testplusarg UVM_TESTNAME=$test_name -sv_seed $seed -testplusarg EXIT_ON_ERROR"
 sim_options="--runall -onerror quit"
 tool_options="-stats"
 

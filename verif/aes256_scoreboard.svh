@@ -14,7 +14,6 @@ class aes256_scoreboard extends uvm_scoreboard;
     byte unsigned plaintext_bytes[16];
     byte unsigned ciphertext_bytes[16];
     bit [127:0] model_data_out;
-    bool_t comparison_pass;
     int unsigned error_count = 0;
 
     function new(string name = "aes256_scoreboard", uvm_component parent = null);
@@ -35,17 +34,13 @@ class aes256_scoreboard extends uvm_scoreboard;
         for (int i = 0; i < 16; i++) model_data_out[i*8 +: 8] = ciphertext_bytes[15-i];
         
         // compare results
-        comparison_pass = TRUE;
         assert (model_data_out == item.data_out) else begin
             `uvm_error(get_type_name(), $sformatf("Ciphertext mismatch: expected 'h%0h, received 'h%0h", model_data_out, item.data_out))
-            comparison_pass = FALSE;
-            error_count += 1;
-        end
-        
-        if (comparison_pass == TRUE) begin
-            `uvm_info(get_type_name(), "Ciphertext matched", UVM_HIGH)
-        end else begin
             `uvm_info(get_type_name(), $sformatf("Entire packet:\n%s", item.sprint()), UVM_NONE)
+            error_count += 1;
+            // UVM is compiled with NO_DPI so can't use +UVM_MAX_QUIT_COUNT=1
+            // workaround: use $finish and $plusargs to specify before simulation starts
+            if ($test$plusargs("EXIT_ON_ERROR")) $finish("");
         end
     endfunction
 

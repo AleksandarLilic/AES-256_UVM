@@ -41,7 +41,13 @@ class aes256_monitor extends uvm_monitor;
         `uvm_info(get_type_name(), $sformatf("next_val_req: %0h, data_in: %0h", DUT_vif.next_val_req, DUT_vif.data_in), UVM_FULL)
     endfunction
 
-    function void collect_outputs(aes256_seq_item item, bit [3:0] cnt);
+    `ifdef HIER_ACCESS
+    function void collect_outputs_exp(aes256_seq_item item);
+        item.key_exp_round_keys = DUT_vif.key_exp_round_keys;
+    endfunction
+    `endif
+
+    function void collect_outputs_enc(aes256_seq_item item, bit [3:0] cnt);
         item.data_out[cnt] = DUT_vif.data_out;
         item.next_val_ready = DUT_vif.next_val_ready;
         `uvm_info(get_type_name(), $sformatf("next_val_ready: %0h, data_out: %0h", DUT_vif.next_val_ready, DUT_vif.data_out), UVM_FULL)
@@ -57,6 +63,9 @@ class aes256_monitor extends uvm_monitor;
             begin // this side of the fork is not relevant the first time it runs (i.e. when key was not yet requested)
                 @(posedge DUT_vif.key_ready);
                 `uvm_info({get_type_name(), ":key_expansion"}, "Key expansion finished", UVM_HIGH)
+                `ifdef HIER_ACCESS
+                collect_outputs_exp(item);
+                `endif
             end
             begin
                 @(posedge DUT_vif.key_expand_start);
@@ -169,7 +178,7 @@ class aes256_monitor extends uvm_monitor;
                         `uvm_info({get_type_name(), ":loading"}, $sformatf("loading data: %0h, at %0d", DUT_vif.data_out, data_out_cnt), UVM_HIGH)
                         if (data_out_cnt > LOADING_CYCLES - 1) 
                             `uvm_fatal({get_type_name(), ":loading"}, "Too many data packets received. Simulation aborted");
-                        collect_outputs(item_loading, LOADING_CYCLES - 1 - data_out_cnt); // MSB arrives first
+                        collect_outputs_enc(item_loading, LOADING_CYCLES - 1 - data_out_cnt); // MSB arrives first
                         data_out_cnt++;
                         @(posedge DUT_vif.clk);
                         #1;

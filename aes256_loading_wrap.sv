@@ -16,6 +16,11 @@ aes256_loading aes256_loading_i(
     .po_data(aes256_if_conn.data_out)
 );
 
+`ifdef HIER_ACCESS
+// hierarchical access the round keys from VHDL to avoid exposing it through the VHDL component interface
+assign aes256_if_conn.key_exp_round_keys = aes256_loading_i.AES256_1.w_KEY_EXP_ROUND_KEYS_ARRAY;
+`endif
+
 endmodule: aes256_loading_wrap
 
 interface aes256_if;
@@ -29,4 +34,7 @@ interface aes256_if;
     logic enc_done;
     logic next_val_ready;
     logic [7:0] data_out;
+    `ifdef HIER_ACCESS
+    logic [0:14] [127:0] key_exp_round_keys;
+    `endif
 endinterface: aes256_if

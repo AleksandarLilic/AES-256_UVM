@@ -10,6 +10,9 @@ class aes256_seq_item extends uvm_sequence_item;
     // design outputs
     bit next_val_ready;
     bit [15:0] [7:0] data_out;
+    `ifdef HIER_ACCESS
+    bit [0:14] [127:0] key_exp_round_keys;
+    `endif
     // timing relationships
     rand byte unsigned key_expand_start_pulse;
     rand byte unsigned key_expand_start_delay;
@@ -44,5 +47,16 @@ class aes256_seq_item extends uvm_sequence_item;
     function new (string name = "aes256_seq_item");
         super.new(name);
     endfunction
+
+    `ifdef HIER_ACCESS
+    // to avoid registering the whole array of round keys
+    // but copy has to be implemented separately for round keys
+    virtual function void do_copy(uvm_object rhs);
+        aes256_seq_item rhs_cast;
+        super.do_copy(rhs);
+        if (!$cast(rhs_cast, rhs)) `uvm_fatal(get_type_name(), "Cast failed")
+        this.key_exp_round_keys = rhs_cast.key_exp_round_keys;
+    endfunction
+    `endif
 
 endclass: aes256_seq_item

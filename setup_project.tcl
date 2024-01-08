@@ -15,6 +15,9 @@ set seed [lindex $defaults_list 1]
 # compilation
 set_property -name {xsim.compile.tcl.pre} -value {pre_compile.tcl} -objects [get_filesets sim_1]
 set_property -name {xsim.compile.xvlog.more_options} -value {-L uvm} -objects [get_filesets sim_1]
+# compilation Verilog options
+# optional, used for AES keys atm
+set_property verilog_define {HIER_ACCESS} [get_filesets sim_1]
 
 # elaboration
 set_property -name {xsim.elaborate.xelab.more_options} -value {-L uvm -sv_lib aes_dpi.so} -objects [get_filesets sim_1]

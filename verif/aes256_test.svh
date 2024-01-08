@@ -7,8 +7,8 @@ class aes256_test extends uvm_test;
     aes256_cfg cfg;
     aes256_env env;
     // TODO: these two shoule either be cli args or a new tests
-    bit check_regular_operation = 1'b0;
-    bit check_interrupts = 1'b0;
+    bit check_regular_operation = 1'b1;
+    bit check_interrupts = 1'b1;
 
     function new (string name = "aes256_test", uvm_component parent = null);
         super.new(name, parent);

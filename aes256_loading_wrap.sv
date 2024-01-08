@@ -19,6 +19,28 @@ aes256_loading aes256_loading_i(
 `ifdef HIER_ACCESS
 // hierarchical access the round keys from VHDL to avoid exposing it through the VHDL component interface
 assign aes256_if_conn.key_exp_round_keys = aes256_loading_i.AES256_1.w_KEY_EXP_ROUND_KEYS_ARRAY;
+
+//`ifdef COVERAGE
+// TODO: consider moving this to the header file and including it here
+// top level
+logic [7:0] data_out;
+assign data_out = aes256_if_conn.data_out;
+
+// key expansion module
+logic [2:0] key_exp_pr_state;
+assign key_exp_pr_state = aes256_loading_i.AES256_1.KEY_EXPANSION_TOP_1.FSM_KEY_EXPANSION_1.pr_state_logic;
+
+// encryption module
+logic [2:0] enc_pr_state;
+assign enc_pr_state = aes256_loading_i.AES256_1.ENCRYPTION_TOP_1.FSM_ENCRYPTION_1.pr_state_logic;
+
+logic [7:0] sbox_in;
+assign sbox_in = aes256_loading_i.AES256_1.ENCRYPTION_TOP_1.SUB_BYTES_1.generate_luts[0].SBOX_i.pi_address;
+
+// loading module
+logic loading_pr_state;
+assign loading_pr_state = aes256_loading_i.DATA_LOADING_1.pr_state_logic;
+//`endif
 `endif
 
 endmodule: aes256_loading_wrap

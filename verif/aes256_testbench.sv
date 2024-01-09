@@ -2,6 +2,7 @@
 
 `include "uvm_macros.svh"
 `include "aes256_test.svh"
+`include "aes256_inc.svh"
 
 module top;
 import uvm_pkg::*;

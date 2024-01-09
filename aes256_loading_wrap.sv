@@ -1,3 +1,8 @@
+`timescale 1ns/1ns
+
+`define KEY_EXP_TOP aes256_loading_i.AES256_1.KEY_EXPANSION_TOP_1
+`define ENC_TOP aes256_loading_i.AES256_1.ENCRYPTION_TOP_1
+`define LOADING_TOP aes256_loading_i.DATA_LOADING_1
 
 module aes256_loading_wrap(
     aes256_if aes256_if_conn
@@ -18,28 +23,44 @@ aes256_loading aes256_loading_i(
 
 `ifdef HIER_ACCESS
 // hierarchical access the round keys from VHDL to avoid exposing it through the VHDL component interface
+// used for model comparison
 assign aes256_if_conn.key_exp_round_keys = aes256_loading_i.AES256_1.w_KEY_EXP_ROUND_KEYS_ARRAY;
 
 //`ifdef COVERAGE
-// TODO: consider moving this to the header file and including it here
+// used for covergroups and toggle coverage 
+// (Vivado can't do code coverage for VHDL, but toggle can be done in this way)
+
 // top level
-logic [7:0] data_out;
-assign data_out = aes256_if_conn.data_out;
-
+wire [7:0] data_out = aes256_if_conn.data_out;
 // key expansion module
-logic [2:0] key_exp_pr_state;
-assign key_exp_pr_state = aes256_loading_i.AES256_1.KEY_EXPANSION_TOP_1.FSM_KEY_EXPANSION_1.pr_state_logic;
-
+// TODO: add key_exp enable logic based on the TB signals and use that to sample key_exp in addition to !key_ready
+wire [255:0] key_exp_master_key = `KEY_EXP_TOP.pi_master_key;
+wire [2:0] key_exp_pr_state = `KEY_EXP_TOP.FSM_KEY_EXPANSION_1.pr_state_logic;
+//wire [5:0] key_exp_cnt = `KEY_EXP_TOP.CNT_8_60_1.reg_COUNTER;
+//wire [31:0] key_exp_parser_word_in = `KEY_EXP_TOP.KEY_PARSER_1.pi_new_key_word;
 // encryption module
-logic [2:0] enc_pr_state;
-assign enc_pr_state = aes256_loading_i.AES256_1.ENCRYPTION_TOP_1.FSM_ENCRYPTION_1.pr_state_logic;
-
-logic [7:0] sbox_in;
-assign sbox_in = aes256_loading_i.AES256_1.ENCRYPTION_TOP_1.SUB_BYTES_1.generate_luts[0].SBOX_i.pi_address;
-
+wire [127:0] enc_data_in = `ENC_TOP.pi_data;
+wire [127:0] enc_data_out = `ENC_TOP.po_data;
+wire [2:0] enc_pr_state = `ENC_TOP.FSM_ENCRYPTION_1.pr_state_logic;
+wire [3:0] enc_cnt = `ENC_TOP.CNT_16_1.po_data;
+wire [127:0] enc_sub_bytes_in = `ENC_TOP.SUB_BYTES_1.pi_data;
+wire [127:0] enc_sub_bytes_out = `ENC_TOP.SUB_BYTES_1.po_data;
+wire [7:0] enc_sbox_in = `ENC_TOP.SUB_BYTES_1.generate_luts[0].SBOX_i.pi_address;
+wire [7:0] enc_sbox_out = `ENC_TOP.SUB_BYTES_1.generate_luts[0].SBOX_i.po_data;
+wire [127:0] enc_shift_rows_in = `ENC_TOP.SHIFT_ROWS_1.pi_data;
+wire [127:0] enc_shift_rows_out = `ENC_TOP.SHIFT_ROWS_1.po_data;
+wire [127:0] enc_mix_columns_in = `ENC_TOP.MIX_COLUMNS_1.pi_data;
+wire [127:0] enc_mix_columns_out = `ENC_TOP.MIX_COLUMNS_1.po_data;
+wire [7:0] enc_lut_lmul2_in = `ENC_TOP.MIX_COLUMNS_1.generate_luts_mul2[0].MUL2_i.pi_address;
+wire [7:0] enc_lut_lmul2_out = `ENC_TOP.MIX_COLUMNS_1.generate_luts_mul2[0].MUL2_i.po_data;
+wire [7:0] enc_lut_lmul3_in = `ENC_TOP.MIX_COLUMNS_1.generate_luts_mul3[0].MUL3_i.pi_address;
+wire [7:0] enc_lut_lmul3_out = `ENC_TOP.MIX_COLUMNS_1.generate_luts_mul3[0].MUL3_i.po_data;
+wire [127:0] enc_add_round_key_in = `ENC_TOP.ADD_ROUND_KEY_1.pi_data;
+wire [127:0] enc_add_round_key_round_key_in = `ENC_TOP.ADD_ROUND_KEY_1.pi_round_key;
+wire [127:0] enc_add_round_key_out = `ENC_TOP.ADD_ROUND_KEY_1.po_data;
 // loading module
-logic loading_pr_state;
-assign loading_pr_state = aes256_loading_i.DATA_LOADING_1.pr_state_logic;
+wire loading_pr_state = `LOADING_TOP.pr_state_logic;
+
 //`endif
 `endif
 

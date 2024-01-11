@@ -12,10 +12,10 @@ aes256_if DUT_aes256_if_i();
 aes256_loading_wrap DUT_aes256_loading_wrap_i(
     .aes256_if_conn(DUT_aes256_if_i)
 );
+
 `ifdef HIER_ACCESS
-    //`ifdef COVERAGE
+    `define DUT DUT_aes256_loading_wrap_i
     `include "aes256_coverage.svh"
-    //`endif
 `endif
 
 initial begin

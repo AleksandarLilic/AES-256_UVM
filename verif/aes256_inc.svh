@@ -9,7 +9,19 @@ const shortint unsigned KEY_EXP_TIMEOUT_CLOCKS = KEY_EXP_CYCLES + 2;
 const shortint unsigned ENC_TIMEOUT_CLOCKS = ENC_CYCLES + 2;
 const shortint unsigned MAX_START_DELAY = LOADING_CYCLES;
 
-// FSMs
+// design FSMs
+typedef enum bit {
+    FSM_LOADING_IDLE = 0,
+    FSM_LOADING_LOADING = 1
+} loading_fsm_t;
+typedef enum bit [2:0] {
+    EXP_FSM_IDLE = 0,
+    EXP_KEY_PARSER = 1,
+    EXP_ROT_WORD = 2,
+    EXP_SUB_WORD = 3,
+    EXP_RCON = 4,
+    EXP_XOR_WE = 5
+} exp_fsm_t;
 typedef enum bit [2:0] {
     ENC_FSM_IDLE = 0,
     ENC_FSM_SUB_BYTES = 1,
@@ -20,20 +32,7 @@ typedef enum bit [2:0] {
 
 // Coverage consts
 const bit [127:0] CP_128_MAX = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF;
-const bit [255:0] CP_255_MAX = 256'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF;
-
-
-// Coverage enables
-`define SUB_BYTES_EN DUT_aes256_if_i.key_ready && DUT_aes256_loading_wrap_i.enc_pr_state == ENC_FSM_SUB_BYTES
-`define SHIFT_ROWS_EN DUT_aes256_if_i.key_ready && DUT_aes256_loading_wrap_i.enc_pr_state == ENC_FSM_SHIFT_ROWS
-`define MIX_COLUMNS_EN DUT_aes256_if_i.key_ready && DUT_aes256_loading_wrap_i.enc_pr_state == ENC_FSM_MIX_COLUMNS
-`define ADD_ROUND_KEY_EN DUT_aes256_if_i.key_ready && DUT_aes256_loading_wrap_i.enc_pr_state == ENC_FSM_ADD_ROUND_KEY
-
-// Coverage macros
-`define CP_128 \
-    bins min = {'h0}; \
-    bins range = {['h0:CP_128_MAX-1]}; \
-    bins max = {CP_128_MAX}
+const bit [255:0] CP_256_MAX = 256'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF;
 
 // Enums
 typedef enum bit { FALSE = 0, TRUE = 1 } bool_t;

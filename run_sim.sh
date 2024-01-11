@@ -31,10 +31,12 @@ if [[ -z $seed ]]; then
     seed=$DEFAULT_SEED
 fi
 
-sim_args="-testplusarg UVM_VERBOSITY=UVM_LOW -testplusarg UVM_TESTNAME=$test_name -sv_seed $seed -testplusarg EXIT_ON_ERROR"
-sim_options="--runall -onerror quit"
+cov_arg="-testplusarg COVERAGE" # take this from CLI?
+sim_args="-testplusarg UVM_VERBOSITY=UVM_LOW -testplusarg UVM_TESTNAME=$test_name -sv_seed $seed -testplusarg EXIT_ON_ERROR $cov_arg"
+sim_options="-onerror quit"
+tcl_opts="-tclbatch ../../../../run_cfg.tcl"
 tool_options="-stats"
 
-xsim top_behav -key "{Behavioral:sim_1:Functional:top}" -log simulate.log $sim_args $sim_options $tool_options
+xsim top_behav -key "{Behavioral:sim_1:Functional:top}" -log simulate.log $tcl_opts $sim_args $sim_options $tool_options
 
 echo "Simulation finished"

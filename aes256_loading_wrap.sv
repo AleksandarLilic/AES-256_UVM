@@ -24,7 +24,7 @@ aes256_loading aes256_loading_i(
     `define ENC_TOP aes256_loading_i.AES256_1.ENCRYPTION_TOP_1
     `define LOADING_TOP aes256_loading_i.DATA_LOADING_1
 
-    // used for model comparison
+    // used for C model comparison in scoreboard
     assign aes256_if_conn.key_exp_round_keys = `AES_TOP.w_KEY_EXP_ROUND_KEYS_ARRAY;
 
     // The rest of this define is used for covergroups and toggle coverage 
@@ -82,8 +82,14 @@ aes256_loading aes256_loading_i(
     assign enc_add_round_key_out = `ENC_TOP.ADD_ROUND_KEY_1.po_data;
 
     // loading module
+    logic [127:0] loading_data_in;
     logic loading_pr_state;
+    logic [3:0] loading_cnt;
+    logic [7:0] loading_data_out;
+    assign loading_data_in = `LOADING_TOP.pi_data;
     assign loading_pr_state = `LOADING_TOP.pr_state_logic;
+    assign loading_cnt = `LOADING_TOP.reg_COUNTER;
+    assign loading_data_out = `LOADING_TOP.po_data;
 
 `endif // HIER_ACCESS
 

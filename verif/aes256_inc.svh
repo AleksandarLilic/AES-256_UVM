@@ -16,11 +16,11 @@ typedef enum bit {
 } loading_fsm_t;
 typedef enum bit [2:0] {
     EXP_FSM_IDLE = 0,
-    EXP_KEY_PARSER = 1,
-    EXP_ROT_WORD = 2,
-    EXP_SUB_WORD = 3,
-    EXP_RCON = 4,
-    EXP_XOR_WE = 5
+    EXP_FSM_KEY_PARSER = 1,
+    EXP_FSM_ROT_WORD = 2,
+    EXP_FSM_SUB_WORD = 3,
+    EXP_FSM_RCON = 4,
+    EXP_FSM_XOR_WE = 5
 } exp_fsm_t;
 typedef enum bit [2:0] {
     ENC_FSM_IDLE = 0,

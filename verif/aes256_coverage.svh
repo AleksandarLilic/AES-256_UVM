@@ -1,38 +1,66 @@
 
-covergroup cg_256bit_data(ref logic [255:0] data_in, ref logic en) @(posedge DUT_aes256_if_i.clk);
+covergroup cg_256bit_data(ref logic [255:0] data, ref logic en) @(posedge DUT_aes256_if_i.clk);
     type_option.goal = 100;
     type_option.weight = 1;
     option.per_instance = 1;
-    data_in_low : coverpoint data_in[63:0] iff (en) { option.auto_bin_max = 256; }
-    data_in_mi_lo : coverpoint data_in[127:64] iff (en) { option.auto_bin_max = 256; }
-    data_in_mi_hi : coverpoint data_in[191:128] iff (en) { option.auto_bin_max = 256; }
-    data_in_high : coverpoint data_in[255:192] iff (en) { option.auto_bin_max = 256; }
-    data_in_min_max: coverpoint data_in iff (en) { bins min = {'h0}; bins max = {CP_256_MAX}; }
+    data_low_cp : coverpoint data[63:0] iff (en) { option.auto_bin_max = 256; }
+    data_mi_lo_cp : coverpoint data[127:64] iff (en) { option.auto_bin_max = 256; }
+    data_mi_hi_cp : coverpoint data[191:128] iff (en) { option.auto_bin_max = 256; }
+    data_high_cp : coverpoint data[255:192] iff (en) { option.auto_bin_max = 256; }
+    data_min_max_cp: coverpoint data iff (en) { bins min = {'h0}; bins max = {CP_256_MAX}; }
 endgroup
 
-covergroup cg_128bit_data(ref logic [127:0] data_in, ref logic en) @(posedge DUT_aes256_if_i.clk);
+covergroup cg_128bit_data(ref logic [127:0] data, ref logic en) @(posedge DUT_aes256_if_i.clk);
     type_option.goal = 100;
     type_option.weight = 1;
     option.per_instance = 1;
-    data_in_low : coverpoint data_in[31:0] iff (en) { option.auto_bin_max = 128; }
-    data_in_mi_lo : coverpoint data_in[63:32] iff (en) { option.auto_bin_max = 128; }
-    data_in_mi_hi : coverpoint data_in[95:64] iff (en) { option.auto_bin_max = 128; }
-    data_in_high : coverpoint data_in[127:96] iff (en) { option.auto_bin_max = 128; }
-    data_in_min_max: coverpoint data_in iff (en) { bins min = {'h0}; bins max = {CP_128_MAX}; }
+    data_low_cp : coverpoint data[31:0] iff (en) { option.auto_bin_max = 128; }
+    data_mi_lo_cp : coverpoint data[63:32] iff (en) { option.auto_bin_max = 128; }
+    data_mi_hi_cp : coverpoint data[95:64] iff (en) { option.auto_bin_max = 128; }
+    data_high_cp : coverpoint data[127:96] iff (en) { option.auto_bin_max = 128; }
+    data_min_max_cp: coverpoint data iff (en) { bins min = {'h0}; bins max = {CP_128_MAX}; }
 endgroup
 
-covergroup cg_8bit_LUT(ref logic [7:0] data_in, ref logic en) @(posedge DUT_aes256_if_i.clk);
+covergroup cg_32bit_data(ref logic [31:0] data, ref logic en) @(posedge DUT_aes256_if_i.clk);
     type_option.goal = 100;
     type_option.weight = 1;
     option.per_instance = 1;
-    LUT_cp : coverpoint data_in iff (en) { option.auto_bin_max = 256; }
+    data_low_cp : coverpoint data[7:0] iff (en) { option.auto_bin_max = 32; }
+    data_mi_lo_cp : coverpoint data[15:8] iff (en) { option.auto_bin_max = 32; }
+    data_mi_hi_cp : coverpoint data[23:16] iff (en) { option.auto_bin_max = 32; }
+    data_high_cp : coverpoint data[31:24] iff (en) { option.auto_bin_max = 32; }
+    data_min_max_cp: coverpoint data iff (en) { bins min = {'h0}; bins max = {CP_32_MAX}; }
 endgroup
 
-covergroup cg_8bit_data(ref logic [7:0] data_in, ref logic en) @(posedge DUT_aes256_if_i.clk);
+covergroup cg_8bit_LUT(ref logic [7:0] data, ref logic en) @(posedge DUT_aes256_if_i.clk);
     type_option.goal = 100;
     type_option.weight = 1;
     option.per_instance = 1;
-    data_cp : coverpoint data_in iff (en) { option.auto_bin_max = 256; }
+    LUT_cp : coverpoint data iff (en) { option.auto_bin_max = 256; }
+endgroup
+
+covergroup cg_8bit_data(ref logic [7:0] data, ref logic en) @(posedge DUT_aes256_if_i.clk);
+    type_option.goal = 100;
+    type_option.weight = 1;
+    option.per_instance = 1;
+    data_cp : coverpoint data iff (en) { option.auto_bin_max = 256; }
+endgroup
+
+covergroup cg_rcon_LUT_out(ref logic [31:0] data, ref logic en) @(posedge DUT_aes256_if_i.clk);
+    type_option.goal = 100;
+    type_option.weight = 1;
+    option.per_instance = 1;
+    LUT_cp : coverpoint data iff (en) {
+        bins rcon_0 = {32'h0000_0000};
+        bins rcon_1 = {32'h0100_0000};
+        bins rcon_2 = {32'h0200_0000};
+        bins rcon_3 = {32'h0400_0000};
+        bins rcon_4 = {32'h0800_0000};
+        bins rcon_5 = {32'h1000_0000};
+        bins rcon_6 = {32'h2000_0000};
+        bins rcon_7 = {32'h4000_0000};
+        illegal_bins others_illegal = default;
+    } 
 endgroup
 
 covergroup cg_key_exp (ref logic [2:0] pr_state, ref logic [5:0] cnt, ref logic state_en_n, ref logic cnt_en) @(posedge DUT_aes256_if_i.clk);
@@ -40,7 +68,7 @@ covergroup cg_key_exp (ref logic [2:0] pr_state, ref logic [5:0] cnt, ref logic 
     type_option.weight = 1;
     option.per_instance = 1;
 
-    key_exp_state : coverpoint pr_state
+    key_exp_state_cp : coverpoint pr_state
     iff (!state_en_n){
         // states
         bins idle = {EXP_FSM_IDLE};
@@ -76,7 +104,7 @@ covergroup cg_key_exp (ref logic [2:0] pr_state, ref logic [5:0] cnt, ref logic 
         illegal_bins illegal_trans_from_xor = (EXP_FSM_XOR_WE => EXP_FSM_KEY_PARSER, EXP_FSM_RCON);
     }
 
-    counter : coverpoint cnt
+    counter_cp : coverpoint cnt
     iff (cnt_en){
         bins min = {8};
         bins range = {[9:59]};
@@ -91,7 +119,7 @@ covergroup cg_enc (ref logic [2:0] pr_state, ref logic [3:0] cnt, ref logic stat
     type_option.weight = 1;
     option.per_instance = 1;
 
-    state : coverpoint pr_state
+    state_cp : coverpoint pr_state
         iff (state_en){
             // states
             bins idle = {ENC_FSM_IDLE};
@@ -121,12 +149,12 @@ covergroup cg_enc (ref logic [2:0] pr_state, ref logic [3:0] cnt, ref logic stat
             illegal_bins illegal_trans_from_ark = (ENC_FSM_ADD_ROUND_KEY => ENC_FSM_ADD_ROUND_KEY, ENC_FSM_SHIFT_ROWS, ENC_FSM_MIX_COLUMNS);
         }
     
-    counter : coverpoint cnt
+    counter_cp : coverpoint cnt
         iff (cnt_en){
             bins min = {0};
-            bins range = {[1:13]};
-            bins max = {14};
-            illegal_bins cnt_15 = {15};
+            bins range = {[1:12]};
+            bins max = {13};
+            illegal_bins cnt_14_15 = {14,15};
         }
 endgroup
 
@@ -135,59 +163,47 @@ covergroup cg_loading (ref logic [3:0] cnt, ref logic cnt_en) @(posedge DUT_aes2
     type_option.weight = 1;
     option.per_instance = 1;
 
-    counter : coverpoint cnt
+    counter_cp : coverpoint cnt
         iff (cnt_en){
             bins min = {0};
             bins range = {[1:14]};
             bins max = {15};
         }
-
 endgroup
-
-logic key_exp_cnt_en;
-logic enc_cnt_en;
-logic sub_bytes_en;
-logic shift_rows_en;
-logic mix_columns_en;
-logic add_round_key_en;
-assign key_exp_cnt_en = (`DUT.key_exp_pr_state != EXP_FSM_IDLE);
-assign key_parser_en = (`DUT.key_exp_pr_state == EXP_FSM_KEY_PARSER);
-assign rot_word_en = (`DUT.key_exp_pr_state == EXP_FSM_ROT_WORD);
-assign sub_word_en = (`DUT.key_exp_pr_state == EXP_FSM_SUB_WORD);
-assign rcon_en = (`DUT.key_exp_pr_state == EXP_FSM_RCON);
-assign xor_we_en = (`DUT.key_exp_pr_state == EXP_FSM_XOR_WE);
-assign enc_cnt_en = (`DUT.enc_pr_state != ENC_FSM_IDLE);
-assign sub_bytes_en = (`DUT.enc_pr_state == ENC_FSM_SUB_BYTES);
-assign shift_rows_en = (`DUT.enc_pr_state == ENC_FSM_SHIFT_ROWS);
-assign mix_columns_en = (`DUT.enc_pr_state == ENC_FSM_MIX_COLUMNS);
-assign add_round_key_en = (`DUT.enc_pr_state == ENC_FSM_ADD_ROUND_KEY);
 
 initial begin
     if ($test$plusargs("COVERAGE")) begin
         // key exp
-        static cg_key_exp cg_key_exp_i = new(`DUT.key_exp_pr_state, `DUT.key_exp_cnt, DUT_aes256_if_i.key_ready, key_exp_cnt_en);
-        static cg_256bit_data master_key = new(`DUT.key_exp_master_key, DUT_aes256_if_i.key_expand_start);
+        static cg_key_exp cg_key_exp_i = new(`DUT.key_exp_pr_state, `DUT.key_exp_cnt, DUT_aes256_if_i.key_ready, `DUT.key_exp_cnt_en);
+        static cg_256bit_data master_key = new(`DUT.master_key, DUT_aes256_if_i.key_expand_start);
+        static cg_32bit_data key_parser_cr_word_out = new(`DUT.key_parser_cr_word_out, `DUT.key_parser_en);
+        static cg_32bit_data key_parser_pr_word_out = new(`DUT.key_parser_pr_word_out, `DUT.key_parser_en);
+        static cg_32bit_data rot_word_in = new(`DUT.rot_word_in, `DUT.rot_word_en);
+        static cg_32bit_data rot_word_out = new(`DUT.rot_word_out, `DUT.rot_word_en);
+        static cg_32bit_data sub_word_in = new(`DUT.sub_word_in, `DUT.sub_word_en);
+        static cg_32bit_data sub_word_out = new(`DUT.sub_word_out, `DUT.sub_word_en);
+        static cg_32bit_data rcon_out = new(`DUT.rcon_out, `DUT.rcon_en);
+        static cg_8bit_LUT lut_rcon_in = new(`DUT.lut_rcon_in, `DUT.rcon_en);
+        static cg_rcon_LUT_out lut_rcon_out = new(`DUT.lut_rcon_out, `DUT.rcon_en);
+        static cg_32bit_data xor_sync_in_1 = new(`DUT.xor_sync_in_1, `DUT.xor_sync_en);
+        static cg_32bit_data xor_sync_out = new(`DUT.xor_sync_out, `DUT.xor_sync_en);
         // enc
-        static cg_enc cg_enc_i = new(`DUT.enc_pr_state, `DUT.enc_cnt, DUT_aes256_if_i.key_ready, enc_cnt_en);
+        static cg_enc cg_enc_i = new(`DUT.enc_pr_state, `DUT.enc_cnt, DUT_aes256_if_i.key_ready, `DUT.enc_cnt_en);
         static cg_128bit_data enc_data_in = new(`DUT.enc_data_in, DUT_aes256_if_i.next_val_req);
         static cg_128bit_data enc_data_out = new(`DUT.enc_data_out, DUT_aes256_if_i.enc_done);
-        static cg_128bit_data sub_bytes_in = new(`DUT.enc_sub_bytes_in, sub_bytes_en);
-        static cg_128bit_data sub_bytes_out = new(`DUT.enc_sub_bytes_out, sub_bytes_en);
-        static cg_8bit_LUT sbox_in = new(`DUT.enc_sbox_in, sub_bytes_en);
-        static cg_8bit_LUT sbox_out = new(`DUT.enc_sbox_out, sub_bytes_en);
-        static cg_128bit_data shift_rows_in = new(`DUT.enc_shift_rows_in, shift_rows_en);
-        static cg_128bit_data shift_rows_out = new(`DUT.enc_shift_rows_out, shift_rows_en);
-        static cg_128bit_data mix_columns_in = new(`DUT.enc_mix_columns_in, mix_columns_en);
-        static cg_128bit_data mix_columns_out = new(`DUT.enc_mix_columns_out, mix_columns_en);
-        static cg_8bit_LUT lmul2_in = new(`DUT.enc_lut_lmul2_in, mix_columns_en);
-        static cg_8bit_LUT lmul2_out = new(`DUT.enc_lut_lmul2_out, mix_columns_en);
-        static cg_8bit_LUT lmul3_in = new(`DUT.enc_lut_lmul3_in, mix_columns_en);
-        static cg_8bit_LUT lmul3_out = new(`DUT.enc_lut_lmul3_out, mix_columns_en);
-        static cg_128bit_data add_round_key_in = new(`DUT.enc_add_round_key_in, add_round_key_en);
-        static cg_128bit_data add_round_key_round_key_in = new(`DUT.enc_add_round_key_round_key_in, add_round_key_en);
-        static cg_128bit_data add_round_key_out = new(`DUT.enc_add_round_key_out, add_round_key_en);
+        static cg_128bit_data sub_bytes_out = new(`DUT.sub_bytes_out, `DUT.sub_bytes_en);
+        static cg_8bit_LUT sbox_in = new(`DUT.sbox_in, `DUT.sub_bytes_en);
+        static cg_8bit_LUT sbox_out = new(`DUT.sbox_out, `DUT.sub_bytes_en);
+        static cg_128bit_data shift_rows_out = new(`DUT.shift_rows_out, `DUT.shift_rows_en);
+        static cg_128bit_data mix_columns_out = new(`DUT.mix_columns_out, `DUT.mix_columns_en);
+        static cg_8bit_LUT lmul2_in = new(`DUT.lut_lmul2_in, `DUT.mix_columns_en);
+        static cg_8bit_LUT lmul2_out = new(`DUT.lut_lmul2_out, `DUT.mix_columns_en);
+        static cg_8bit_LUT lmul3_in = new(`DUT.lut_lmul3_in, `DUT.mix_columns_en);
+        static cg_8bit_LUT lmul3_out = new(`DUT.lut_lmul3_out, `DUT.mix_columns_en);
+        static cg_128bit_data add_round_key_in = new(`DUT.add_round_key_in, `DUT.add_round_key_en);
+        static cg_128bit_data add_round_key_round_key_in = new(`DUT.add_round_key_round_key_in, `DUT.add_round_key_en);
+        static cg_128bit_data add_round_key_out = new(`DUT.add_round_key_out, `DUT.add_round_key_en);
         // loading
-        static cg_128bit_data loading_data_in = new(`DUT.loading_data_in, DUT_aes256_if_i.enc_done);
         static cg_loading cg_loading_i = new(`DUT.loading_cnt, DUT_aes256_if_i.next_val_ready);
         static cg_8bit_data loading_data_out = new(`DUT.loading_data_out, DUT_aes256_if_i.next_val_ready);
     end
@@ -201,31 +217,49 @@ end
 bit tc_dummy = 0;
 always @(
     // key exp
-    `DUT.key_exp_master_key or
+    `DUT.master_key or
     `DUT.key_exp_pr_state or
     `DUT.key_exp_cnt or
+    `DUT.key_exp_cnt_en or
+    `DUT.key_parser_cr_word_out or
+    `DUT.key_parser_pr_word_out or
+    `DUT.key_parser_en or
+    `DUT.rot_word_in or
+    `DUT.rot_word_out or
+    `DUT.rot_word_en or
+    `DUT.sub_word_in or
+    `DUT.sub_word_out or
+    `DUT.sub_word_en or
+    `DUT.rcon_out or
+    `DUT.lut_rcon_in or
+    `DUT.lut_rcon_out or
+    `DUT.rcon_en or
+    `DUT.xor_sync_in_1 or
+    `DUT.xor_sync_out or
+    `DUT.xor_sync_en or
     // enc
     `DUT.enc_data_in or
     `DUT.enc_data_out or
     `DUT.enc_pr_state or
     `DUT.enc_cnt or
-    `DUT.enc_sub_bytes_in or
-    `DUT.enc_sub_bytes_out or
-    `DUT.enc_sbox_in or
-    `DUT.enc_sbox_out or
-    `DUT.enc_shift_rows_in or
-    `DUT.enc_shift_rows_out or
-    `DUT.enc_mix_columns_in or
-    `DUT.enc_mix_columns_out or
-    `DUT.enc_lut_lmul2_in or
-    `DUT.enc_lut_lmul2_out or
-    `DUT.enc_lut_lmul3_in or
-    `DUT.enc_lut_lmul3_out or
-    `DUT.enc_add_round_key_in or
-    `DUT.enc_add_round_key_round_key_in or
-    `DUT.enc_add_round_key_out or 
+    `DUT.enc_cnt_en or
+    `DUT.sub_bytes_out or
+    `DUT.sbox_in or
+    `DUT.sbox_out or
+    `DUT.sub_bytes_en or
+    `DUT.shift_rows_out or
+    `DUT.shift_rows_en or
+    `DUT.mix_columns_out or
+    `DUT.lut_lmul2_in or
+    `DUT.lut_lmul2_out or
+    `DUT.lut_lmul3_in or
+    `DUT.lut_lmul3_out or
+    `DUT.mix_columns_en or
+    `DUT.add_round_key_in or
+    `DUT.add_round_key_round_key_in or
+    `DUT.add_round_key_out or
+    `DUT.add_round_key_en or
     // loading
-    `DUT.loading_data_in or
     `DUT.loading_pr_state or
     `DUT.loading_cnt or
     `DUT.loading_data_out)

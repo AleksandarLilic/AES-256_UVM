@@ -31,6 +31,7 @@ typedef enum bit [2:0] {
 } enc_fsm_t;
 
 // Coverage consts
+const bit [31:0] CP_32_MAX = 32'hFFFF_FFFF;
 const bit [127:0] CP_128_MAX = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF;
 const bit [255:0] CP_256_MAX = 256'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF;
 

@@ -6,11 +6,13 @@ DEFAULT_TEST_NAME="aes256_test"
 DEFAULT_SEED=10
 test_name=""
 seed=""
+collect_coverage=false
 get_defaults=false
-while getopts "t:s:g" option; do
+while getopts "t:s:cg" option; do
 case "${option}" in
     t) test_name=${OPTARG};;
     s) seed=${OPTARG};;
+    c) collect_coverage=true;;
     g) get_defaults=true;;
     *) echo "Usage: run_sim.sh [-t <test_name>] [-s <seed>]"; exit 1;;
 esac
@@ -31,7 +33,8 @@ if [[ -z $seed ]]; then
     seed=$DEFAULT_SEED
 fi
 
-cov_arg="-testplusarg COVERAGE" # take this from CLI?
+cov_arg=""
+if [[ $collect_coverage == true ]]; then cov_arg="-testplusarg COVERAGE"; fi
 sim_args="-testplusarg UVM_VERBOSITY=UVM_LOW -testplusarg UVM_TESTNAME=$test_name -sv_seed $seed -testplusarg EXIT_ON_ERROR $cov_arg"
 sim_options="-onerror quit"
 tcl_opts="-tclbatch ../../../../run_cfg.tcl"

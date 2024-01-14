@@ -29,7 +29,10 @@ end
 
 initial begin
     uvm_config_db#(virtual aes256_if)::set(null, "*", "DUT_vif", DUT_aes256_if_i);
-    run_test("aes256_test");
+    run_test("aes256_test_smoke");
+    run_test("aes256_test_max_throughput");
+    run_test("aes256_test_loading_overlaps");
+    run_test("aes256_test_interrupts");
 end
 
 endmodule

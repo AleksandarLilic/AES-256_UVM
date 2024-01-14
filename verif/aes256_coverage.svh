@@ -172,7 +172,7 @@ covergroup cg_loading (ref logic [3:0] cnt, ref logic cnt_en) @(posedge DUT_aes2
 endgroup
 
 initial begin
-    if ($test$plusargs("COVERAGE")) begin
+    if ($test$plusargs("FUNC_COVERAGE")) begin
         // key exp
         static cg_key_exp cg_key_exp_i = new(`DUT.key_exp_pr_state, `DUT.key_exp_cnt, DUT_aes256_if_i.key_ready, `DUT.key_exp_cnt_en);
         static cg_256bit_data master_key = new(`DUT.master_key, DUT_aes256_if_i.key_expand_start);

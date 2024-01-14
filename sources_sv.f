@@ -1,4 +1,4 @@
 sv work \
---include "./verif" \
-"./aes256_loading_wrap.sv" \
-"./verif/aes256_testbench.sv" \
+--include "$REPO_ROOT/verif" \
+"$REPO_ROOT/aes256_loading_wrap.sv" \
+"$REPO_ROOT/verif/aes256_testbench.sv" \

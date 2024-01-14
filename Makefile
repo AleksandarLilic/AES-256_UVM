@@ -1,19 +1,19 @@
 TOP := top
-SOURCE_FILES_SV := sources_sv.f
-SOURCE_FILES_VHD := sources_vhd.f
+SOURCE_FILES_SV := $(REPO_ROOT)/sources_sv.f
+SOURCE_FILES_VHD := $(REPO_ROOT)/sources_vhd.f
 VERILOG_DEFINES := -d HIER_ACCESS
 COMP_OPTS_SV := -sv --incr --relax  -L uvm -L uvm
 COMP_OPTS_VHD := --incr --relax
-DPI_MODEL := aes-256_model
+DPI_ROOT := $(REPO_ROOT)/aes-256_model
+DPI_SRCS := $(DPI_ROOT)/aes.c $(DPI_ROOT)/aes_dpi.c
 DPI_OUT := aes_dpi.so
-DPI_SRCS := $(DPI_MODEL)/aes.c $(DPI_MODEL)/aes_dpi.c
 ELAB_OPTS := -debug typical --incr --relax -L uvm -sv_lib $(DPI_OUT) -cc_type t --mt 8
 
-TCLBATCH := run_cfg.tcl
+TCLBATCH := $(REPO_ROOT)/run_cfg.tcl
 UVM_VERBOSITY := UVM_LOW
-UVM_TESTNAME := aes256_test
+UVM_TESTNAME := aes256_test_smoke
 SEED := 10
-COVERAGE := COVERAGE
+FUNC_COV := FUNC_COVERAGE
 
 all: sim
 
@@ -32,7 +32,7 @@ elab: .elab.touchfile
 	touch .elab.touchfile
 
 sim: .elab.touchfile
-	xsim $(TOP) -tclbatch $(TCLBATCH) -testplusarg UVM_VERBOSITY=$(UVM_VERBOSITY) -testplusarg UVM_TESTNAME=$(UVM_TESTNAME) -sv_seed $(SEED) -stats -onerror quit -testplusarg EXIT_ON_ERROR -testplusarg $(COVERAGE)
+	xsim $(TOP) -tclbatch $(TCLBATCH) -testplusarg UVM_VERBOSITY=$(UVM_VERBOSITY) -testplusarg UVM_TESTNAME=$(UVM_TESTNAME) -sv_seed $(SEED) -stats -onerror quit -testplusarg EXIT_ON_ERROR -testplusarg $(FUNC_COV) -log test.log
 	touch .sim.touchfile
 
 coverage: .sim.touchfile
@@ -43,6 +43,7 @@ cleancov:
 	rm -rf xcrg_code_cov_report
 	rm -rf xcrg_func_cov_report
 
+# code coverage db is built during elab and populated during sim
 clean: cleancov
 	rm -rf .*touchfile
 	rm -rf xsim.dir

@@ -9,6 +9,9 @@ local/
 *.sim
 *.xpr
 *.wcfg
+*.wdb
+*.log
+*.jou
 xsim.dir/
 xsim*
 xelab*
@@ -16,6 +19,13 @@ xvhdl*
 xvlog*
 xsc*
 vivado*
+xcrg_*_cov_report
+
+# libraries
+*.so
+
+# make touchfiles
+*touchfile
 
 # VSCode files
 .vscode/

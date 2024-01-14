@@ -1,0 +1,30 @@
+vhdl work  \
+"./aes-256_src/src/MATRIX_CONST.vhd" \
+"./aes-256_src/src/add_round_key.vhd" \
+"./aes-256_src/src/package_aes256_component.vhd" \
+"./aes-256_src/src/aes256.vhd" \
+"./aes-256_src/src/package_aes256_loading_component.vhd" \
+"./aes-256_src/src/aes256_loading.vhd" \
+"./aes-256_src/src/cnt_16.vhd" \
+"./aes-256_src/src/cnt_8_60.vhd" \
+"./aes-256_src/src/data_loading.vhd" \
+"./aes-256_src/src/package_encryption_lut.vhd" \
+"./aes-256_src/src/package_encryption_component.vhd" \
+"./aes-256_src/src/encryption_top.vhd" \
+"./aes-256_src/src/fsm_encryption.vhd" \
+"./aes-256_src/src/fsm_key_expansion.vhd" \
+"./aes-256_src/src/package_key_exp_component.vhd" \
+"./aes-256_src/src/key_expansion_top.vhd" \
+"./aes-256_src/src/key_parser.vhd" \
+"./aes-256_src/src/lut_mul2.vhd" \
+"./aes-256_src/src/lut_mul3.vhd" \
+"./aes-256_src/src/lut_rcon.vhd" \
+"./aes-256_src/src/lut_sbox.vhd" \
+"./aes-256_src/src/mix_columns.vhd" \
+"./aes-256_src/src/package_key_exp_lut.vhd" \
+"./aes-256_src/src/rcon.vhd" \
+"./aes-256_src/src/rot_word.vhd" \
+"./aes-256_src/src/shift_rows.vhd" \
+"./aes-256_src/src/sub_bytes.vhd" \
+"./aes-256_src/src/sub_word.vhd" \
+"./aes-256_src/src/xor_sync.vhd"

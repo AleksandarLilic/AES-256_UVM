@@ -7,6 +7,7 @@ COMP_OPTS_VHD := --incr --relax
 DPI_ROOT := $(REPO_ROOT)/aes-256_model
 DPI_SRCS := $(DPI_ROOT)/aes.c $(DPI_ROOT)/aes_dpi.c
 DPI_OUT := aes_dpi.so
+DPI_LOG := aes_dpi.log
 ELAB_OPTS := -debug typical --incr --relax -L uvm -sv_lib $(DPI_OUT) -cc_type t --mt 8
 
 TCLBATCH := $(REPO_ROOT)/run_cfg.tcl
@@ -18,22 +19,29 @@ FUNC_COV := FUNC_COVERAGE
 all: sim
 
 $(DPI_OUT): $(DPI_SRCS)
-	xsc $(DPI_SRCS) -o $(DPI_OUT)
+	xsc $(DPI_SRCS) -o $(DPI_OUT) > $(DPI_LOG) 2>&1
 
 compile: .compile.touchfile
 .compile.touchfile:
-	xvlog $(COMP_OPTS_SV) -prj $(SOURCE_FILES_SV) $(VERILOG_DEFINES)
-	xvhdl $(COMP_OPTS_VHD) -prj $(SOURCE_FILES_VHD)
+	@echo "Compiling SystemVerilog"
+	xvlog $(COMP_OPTS_SV) -prj $(SOURCE_FILES_SV) $(VERILOG_DEFINES) > /dev/null 2>&1
+	@echo "Compiling VHDL"
+	xvhdl $(COMP_OPTS_VHD) -prj $(SOURCE_FILES_VHD) > /dev/null 2>&1
 	touch .compile.touchfile
+	@echo "Compile done"
 
 elab: .elab.touchfile
 .elab.touchfile: .compile.touchfile $(DPI_OUT)
-	xelab $(TOP) $(ELAB_OPTS) $(VERILOG_DEFINES)
+	@echo "Elaborating design"
+	xelab $(TOP) $(ELAB_OPTS) $(VERILOG_DEFINES) > /dev/null 2>&1
 	touch .elab.touchfile
+	@echo "Elaboration done"
 
 sim: .elab.touchfile
-	xsim $(TOP) -tclbatch $(TCLBATCH) -testplusarg UVM_VERBOSITY=$(UVM_VERBOSITY) -testplusarg UVM_TESTNAME=$(UVM_TESTNAME) -sv_seed $(SEED) -stats -onerror quit -testplusarg EXIT_ON_ERROR -testplusarg $(FUNC_COV) -log test.log
+	@echo "Running simulation"
+	xsim $(TOP) -tclbatch $(TCLBATCH) -testplusarg UVM_VERBOSITY=$(UVM_VERBOSITY) -testplusarg UVM_TESTNAME=$(UVM_TESTNAME) -sv_seed $(SEED) -stats -onerror quit -testplusarg EXIT_ON_ERROR -testplusarg $(FUNC_COV) -log test.log > /dev/null 2>&1
 	touch .sim.touchfile
+	@echo "Simulation done"
 
 coverage: .sim.touchfile
 	xcrg -cc_dir xsim.codeCov/work.top/ -report_format html

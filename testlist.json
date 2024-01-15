@@ -1,0 +1,6 @@
+[
+    "aes256_test_smoke",
+    "aes256_test_max_throughput",
+    "aes256_test_loading_overlaps",
+    "aes256_test_interrupts"
+]

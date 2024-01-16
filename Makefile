@@ -8,7 +8,8 @@ DPI_ROOT := $(REPO_ROOT)/aes-256_model
 DPI_SRCS := $(DPI_ROOT)/aes.c $(DPI_ROOT)/aes_dpi.c
 DPI_OUT := aes_dpi.so
 DPI_LOG := aes_dpi.log
-ELAB_OPTS := -debug typical --incr --relax -L uvm -sv_lib $(DPI_OUT) -cc_type t --mt 8
+ELAB_DEBUG := typical
+ELAB_OPTS := -debug $(ELAB_DEBUG) --incr --relax -L uvm -sv_lib $(DPI_OUT) -cc_type t --mt 8
 
 TCLBATCH := $(REPO_ROOT)/run_cfg.tcl
 UVM_VERBOSITY := UVM_LOW
@@ -19,7 +20,9 @@ FUNC_COV := FUNC_COVERAGE
 all: sim
 
 $(DPI_OUT): $(DPI_SRCS)
+	@echo "Building DPI model"
 	xsc $(DPI_SRCS) -o $(DPI_OUT) > $(DPI_LOG) 2>&1
+	@echo "DPI model built"
 
 compile: .compile.touchfile
 .compile.touchfile:
@@ -28,7 +31,7 @@ compile: .compile.touchfile
 	@echo "Compiling VHDL"
 	xvhdl $(COMP_OPTS_VHD) -prj $(SOURCE_FILES_VHD) > /dev/null 2>&1
 	touch .compile.touchfile
-	@echo "Compile done"
+	@echo "RTL compilation done"
 
 elab: .elab.touchfile
 .elab.touchfile: .compile.touchfile $(DPI_OUT)

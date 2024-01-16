@@ -24,6 +24,12 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
         forever begin
             seq_item_port.get_next_item(item);
             if (item.key_expand_start == 1) begin
+                if (DUT_vif.next_val_ready == 1 || DUT_vif.enc_done == 1) begin
+                    // if loading is in progress or about to start
+                    // either wait or allow interrupt
+                    if (item.key_exp_wait_for_loading_end == TRUE) @(negedge DUT_vif.next_val_ready);
+                    else `uvm_info(get_type_name(), "Loading not waited for before key expansion", UVM_MEDIUM)
+                end
                 `uvm_info(get_type_name(), "Key expansion started", UVM_MEDIUM)
                 repeat (item.key_expand_start_delay) @(posedge DUT_vif.clk);
                 #1;

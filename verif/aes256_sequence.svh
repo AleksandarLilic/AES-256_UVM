@@ -4,8 +4,9 @@ import uvm_pkg::*;
 class aes256_sequence extends uvm_sequence#(aes256_seq_item);
     rand int number_of_keys = 1;
     rand int number_of_plaintexts = 2;
-    rand bool_t wait_for_key_ready = TRUE; // TODO: this should be used for coverage to hit every state of key expansion FSM to get to idle from every state;
-    rand bool_t wait_for_enc_done = TRUE;
+    bool_t wait_for_key_ready = TRUE;
+    bool_t wait_for_enc_done = TRUE;
+    bool_t key_exp_wait_for_loading_end = TRUE;
     rand byte unsigned wait_period_at_the_end = 10;
     rand exp_delay_mode_t exp_delay_mode = EXP_RANDOM;
     rand enc_delay_mode_t enc_delay_mode = ENC_RANDOM;
@@ -21,6 +22,18 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
         super.new(name);
     endfunction
 
+    function set_wait_key_ready(bool_t state);
+        this.wait_for_key_ready = state;
+    endfunction
+
+    function set_wait_enc_done(bool_t state);
+        this.wait_for_enc_done = state;
+    endfunction
+
+    function set_key_exp_wait_for_loading(bool_t state);
+        this.key_exp_wait_for_loading_end = state;
+    endfunction
+
     virtual task body();
         aes256_seq_item item;
         int unsigned key_cnt = 0;
@@ -34,6 +47,7 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
             item.key_expand_start = 1;
             item.next_val_req = 0;
             item.wait_for_key_ready = this.wait_for_key_ready;
+            item.key_exp_wait_for_loading_end = this.key_exp_wait_for_loading_end;
             case (exp_delay_mode)
                 EXP_NO_DELAY: rnd_status = item.randomize() with { key_expand_start_delay == 1; key_expand_start_pulse == 1; };
                 EXP_WITH_DELAY: rnd_status = item.randomize() with { key_expand_start_delay > 1; };
@@ -43,6 +57,10 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
             assert(rnd_status) else `uvm_fatal(get_type_name(), "Randomization failed")
             `SEND_ITEM(item, 0);
             
+            // TODO: prevend repeated randomization of the master key to avoid confusion
+            // has no impact either way
+            // current_master_key = item.master_key;
+            // randomize with { master_key == current_master_key; };
             for (pt_cnt = 0; pt_cnt < number_of_plaintexts; pt_cnt++) begin
                 rnd_status = 'b0;
                 `uvm_info(get_type_name(), $sformatf(" ===> New Plaintext. Count: %0d <===", pt_cnt), UVM_MEDIUM)

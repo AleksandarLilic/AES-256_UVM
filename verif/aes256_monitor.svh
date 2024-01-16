@@ -29,7 +29,7 @@ class aes256_monitor extends uvm_monitor;
         // when expansion starts, all previous inputs and outputs are rendered invalid
         item.key_expand_start = DUT_vif.key_expand_start;
         item.master_key = DUT_vif.master_key;
-        `uvm_info(get_type_name(), $sformatf("key_expand_start: %0h, master_key: %0h", DUT_vif.master_key, DUT_vif.key_expand_start), UVM_FULL)
+        `uvm_info(get_type_name(), $sformatf("key_expand_start: %1b, master_key: %0h", DUT_vif.key_expand_start, DUT_vif.master_key), UVM_FULL)
         collect_inputs_enc(item);
         item.data_out = 'h0;
         item.next_val_ready = 1'b0;

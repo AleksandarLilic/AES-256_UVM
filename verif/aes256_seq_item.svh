@@ -13,6 +13,9 @@ class aes256_seq_item extends uvm_sequence_item;
     `ifdef HIER_ACCESS
     bit [0:14] [127:0] key_exp_round_keys;
     `endif
+    // TODO
+    // vector expected_data_out;
+    // bit [127:0] expected_data_out;
     // timing relationships
     rand byte unsigned key_expand_start_pulse;
     rand byte unsigned key_expand_start_delay;
@@ -20,6 +23,7 @@ class aes256_seq_item extends uvm_sequence_item;
     rand byte unsigned next_val_req_delay;
     bool_t wait_for_key_ready = TRUE;
     bool_t wait_for_enc_done = TRUE;
+    bool_t key_exp_wait_for_loading_end = TRUE;
     
     `uvm_object_utils_begin(aes256_seq_item)
         // design inputs
@@ -37,6 +41,7 @@ class aes256_seq_item extends uvm_sequence_item;
         `uvm_field_int(next_val_req_delay, UVM_DEFAULT | UVM_UNSIGNED)
         `uvm_field_enum(bool_t, wait_for_key_ready, UVM_DEFAULT)
         `uvm_field_enum(bool_t, wait_for_enc_done, UVM_DEFAULT)
+        `uvm_field_enum(bool_t, key_exp_wait_for_loading_end, UVM_DEFAULT)
     `uvm_object_utils_end
 
     constraint c_key_expand_start_delay { key_expand_start_delay inside { [0:32] }; }

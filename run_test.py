@@ -9,7 +9,7 @@ import json
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run RTL simulation.')
-    parser.add_argument('-t', '--test', nargs='+', help='Specify the tests to run')
+    parser.add_argument('-t', '--test', action='append', help='Specify the tests to run')
     parser.add_argument('--testlist', help='Path to a JSON file containing a list of tests')
     parser.add_argument('--rundir', help='Optional custom run directory name')
     parser.add_argument('--keep-build', action='store_true', help='Reuse existing build directory if available')

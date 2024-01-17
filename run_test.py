@@ -14,6 +14,7 @@ def parse_args():
     parser.add_argument('--rundir', help='Optional custom run directory name')
     parser.add_argument('--keep-build', action='store_true', help='Reuse existing build directory if available')
     parser.add_argument('-j', '--jobs', type=int, default=os.cpu_count(), help='Number of parallel jobs to run (default: number of CPU cores)')
+    parser.add_argument('--coverage', action='store_true', help='Enable coverage analysis')
     return parser.parse_args()
 
 def read_tests_from_json(file_path):
@@ -106,17 +107,44 @@ def main():
         partial_run_test = functools.partial(run_test, run_dir=run_dir, build_dir=build_dir)
         pool.map(partial_run_test, all_tests)
     
-    # print test results
+    # check test suite results
+    all_tests_passed = True
     print("\nSummary:")
     for test_name in all_tests:
         test_dir = os.path.join(run_dir, f"test_{test_name}")
         status_file_path = os.path.join(test_dir, "test.status")
         if os.path.exists(status_file_path):
             with open(status_file_path, 'r') as status_file:
-                print(status_file.read())
+                status = status_file.read()
+                print(status)
+                if "PASSED" not in status:
+                    all_tests_passed = False
         else:
             print(f"Status for {test_name} not found.")
-    print()
+            all_tests_passed = False
+    if all_tests_passed:
+        print("\nTest suite PASSED.\n")
+    else:
+        print("\nTest suite FAILED.\n")
+
+    # coverage analysis
+    if args.coverage:
+        if not all_tests_passed:
+            raise RuntimeError("Cannot perform coverage analysis when test suite failed.")
+        # link Makefile in the rundir
+        makefile_path = os.path.join(os.getcwd(), "Makefile")
+        linked_makefile_path = os.path.join(run_dir, "Makefile")
+        if not os.path.exists(linked_makefile_path):
+            os.symlink(makefile_path, linked_makefile_path)
+        else:
+            subprocess.run(["make", "cleancov"], cwd=run_dir)
+
+        # create cc_dirs arguments string
+        cc_dirs = ' '.join([f"-cc_dir 'test_{test_name}'" for test_name in all_tests])
+        fc_dirs = ' '.join([f"-dir 'test_{test_name}/xsim.covdb'" for test_name in all_tests])
+
+        subprocess.run(["make", "code_cov_merge", f"CODE_COV_DB_ALL={cc_dirs}"], cwd=run_dir)
+        subprocess.run(["make", "func_cov_merge", f"FUNC_COV_DB_ALL={fc_dirs}"], cwd=run_dir)
 
 if __name__ == "__main__":
     main()

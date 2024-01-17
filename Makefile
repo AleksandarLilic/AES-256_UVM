@@ -17,6 +17,11 @@ UVM_TESTNAME := aes256_test_smoke
 SEED := 10
 FUNC_COV := FUNC_COVERAGE
 
+CODE_COV_DB_PATH := xsim.codeCov/work.top
+CODE_COV_DB_ALL := -cc_dir $(CODE_COV_DB_PATH)
+FUNC_COV_DB_PATH := xsim.covdb/work.top
+FUNC_COV_DB_ALL := -dir $(FUNC_COV_DB_PATH)
+
 all: sim
 
 $(DPI_OUT): $(DPI_SRCS)
@@ -46,13 +51,23 @@ sim: .elab.touchfile
 	touch .sim.touchfile
 	@echo "Simulation done"
 
-coverage: .sim.touchfile
-	xcrg -cc_dir xsim.codeCov/work.top/ -report_format html
+coverage:
+	xcrg -cc_dir $(CODE_COV_DB_PATH) -report_format html -dir $(FUNC_COV_DB_PATH) 
+
+code_cov_merge:
+	xcrg -merge_cc -cc_db work.top $(CODE_COV_DB_ALL) -log xcrg_cc.log > /dev/null 2>&1
+
+func_cov_merge:
+	xcrg $(FUNC_COV_DB_ALL) -log xcrg_fc.log > /dev/null 2>&1
 
 cleancov:
 	rm -rf xcrg.log
+	rm -rf xcrg_cc.log
+	rm -rf xcrg_fc.log
 	rm -rf xcrg_code_cov_report
 	rm -rf xcrg_func_cov_report
+	rm -rf xsim.codeCov/xcrg_merged
+	rm -rf xsim.covdb/xcrg_mdb
 
 # code coverage db is built during elab and populated during sim
 clean: cleancov

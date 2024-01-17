@@ -67,7 +67,7 @@ class aes256_test_max_throughput extends aes256_test_base;
 
         // test scenario with key expansion and encryption max throughput
         assert(seq.randomize() with {
-            number_of_keys == 20;
+            number_of_keys == 50;
             number_of_plaintexts == 100;
             exp_delay_mode == EXP_NO_DELAY;
             enc_delay_mode == ENC_NO_DELAY;
@@ -79,6 +79,33 @@ class aes256_test_max_throughput extends aes256_test_base;
         phase.drop_objection(this);
     endtask: run_phase
 endclass: aes256_test_max_throughput
+
+class aes256_test_key_gen extends aes256_test_base;
+    `uvm_component_utils(aes256_test_key_gen)
+
+    function new (string name = "aes256_test_key_gen", uvm_component parent = null);
+        super.new(name, parent);
+    endfunction
+
+    task run_phase(uvm_phase phase);
+        aes256_sequence seq;
+        phase.raise_objection(this);
+        #10;
+        seq = aes256_sequence::type_id::create("seq");
+
+        assert(seq.randomize() with {
+            number_of_keys == 4000;
+            number_of_plaintexts == 1;
+            exp_delay_mode == EXP_NO_DELAY;
+            enc_delay_mode == ENC_NO_DELAY;
+            wait_period_at_the_end == 20;
+        })
+        else `uvm_fatal(get_type_name(), "Randomization failed");
+        seq.start(env.agent_1.sequencer_1);
+
+        phase.drop_objection(this);
+    endtask: run_phase
+endclass: aes256_test_key_gen
 
 class aes256_test_delays extends aes256_test_base;
     `uvm_component_utils(aes256_test_delays)

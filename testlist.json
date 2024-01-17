@@ -1,6 +1,7 @@
 [
     "aes256_test_smoke",
     "aes256_test_max_throughput",
+    "aes256_test_key_gen",
     "aes256_test_delays",
     "aes256_test_interrupts"
 ]

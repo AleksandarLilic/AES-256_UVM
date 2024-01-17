@@ -13,6 +13,7 @@ def parse_args():
     parser.add_argument('--testlist', help='Path to a JSON file containing a list of tests')
     parser.add_argument('--rundir', help='Optional custom run directory name')
     parser.add_argument('--keep-build', action='store_true', help='Reuse existing build directory if available')
+    parser.add_argument('-j', '--jobs', type=int, default=os.cpu_count(), help='Number of parallel jobs to run (default: number of CPU cores)')
     return parser.parse_args()
 
 def read_tests_from_json(file_path):
@@ -56,6 +57,14 @@ def main():
     if args.test and args.testlist:
         raise ValueError("Cannot use both -t|--test and --testlist. Choose one.")
     
+    # check if the specified number of jobs exceeds the number of CPU cores
+    if args.jobs < 1:
+        raise ValueError("Error: The number of parallel jobs must be at least 1.")
+    total_cores = os.cpu_count()
+    if args.jobs > total_cores:
+        print(f"Warning: The specified number of jobs ({args.jobs}) exceeds the number of available CPU cores ({total_cores}).")
+    print(f"Running with {args.jobs} parallel jobs.")
+    
     # load internal test list
     internal_testlist_path = os.path.join(os.path.dirname(__file__), "testlist.json")
     valid_tests = read_tests_from_json(internal_testlist_path)
@@ -92,7 +101,7 @@ def main():
         subprocess.run(["make", "elab"], cwd=build_dir)
 
     # run tests in parallel
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.Pool(args.jobs) as pool:
         # create a partial function with fixed run_dir and build_dir
         partial_run_test = functools.partial(run_test, run_dir=run_dir, build_dir=build_dir)
         pool.map(partial_run_test, all_tests)

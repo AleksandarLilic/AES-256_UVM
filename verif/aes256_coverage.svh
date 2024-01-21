@@ -46,12 +46,27 @@ covergroup cg_8bit_data(ref logic [7:0] data, ref logic en) @(posedge DUT_aes256
     data_cp : coverpoint data iff (en) { option.auto_bin_max = 256; }
 endgroup
 
+covergroup cg_rcon_LUT_in(ref logic [7:0] data, ref logic en) @(posedge DUT_aes256_if_i.clk);
+    type_option.goal = 100;
+    type_option.weight = 1;
+    option.per_instance = 1;
+    LUT_cp : coverpoint data iff (en) {
+        bins rcon_1 = {8'h08};
+        bins rcon_2 = {8'h10};
+        bins rcon_3 = {8'h18};
+        bins rcon_4 = {8'h20};
+        bins rcon_5 = {8'h28};
+        bins rcon_6 = {8'h30};
+        bins rcon_7 = {8'h38};
+        illegal_bins others_illegal = default;
+    } 
+endgroup
+
 covergroup cg_rcon_LUT_out(ref logic [31:0] data, ref logic en) @(posedge DUT_aes256_if_i.clk);
     type_option.goal = 100;
     type_option.weight = 1;
     option.per_instance = 1;
     LUT_cp : coverpoint data iff (en) {
-        bins rcon_0 = {32'h0000_0000};
         bins rcon_1 = {32'h0100_0000};
         bins rcon_2 = {32'h0200_0000};
         bins rcon_3 = {32'h0400_0000};
@@ -183,7 +198,7 @@ initial begin
         static cg_32bit_data sub_word_in = new(`DUT.sub_word_in, `DUT.sub_word_en);
         static cg_32bit_data sub_word_out = new(`DUT.sub_word_out, `DUT.sub_word_en);
         static cg_32bit_data rcon_out = new(`DUT.rcon_out, `DUT.rcon_en);
-        static cg_8bit_LUT lut_rcon_in = new(`DUT.lut_rcon_in, `DUT.rcon_en);
+        static cg_rcon_LUT_in lut_rcon_in = new(`DUT.lut_rcon_in, `DUT.rcon_en);
         static cg_rcon_LUT_out lut_rcon_out = new(`DUT.lut_rcon_out, `DUT.rcon_en);
         static cg_32bit_data xor_sync_in_1 = new(`DUT.xor_sync_in_1, `DUT.xor_sync_en);
         static cg_32bit_data xor_sync_out = new(`DUT.xor_sync_out, `DUT.xor_sync_en);
@@ -264,5 +279,5 @@ always @(
     `DUT.loading_cnt or
     `DUT.loading_data_out)
     begin 
-        tc_dummy <= ~tc_dummy;
+        tc_dummy <= 1'b1;
     end

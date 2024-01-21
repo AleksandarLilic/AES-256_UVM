@@ -53,6 +53,24 @@ class aes256_seq_item extends uvm_sequence_item;
         super.new(name);
     endfunction
 
+    `ifdef VIVADO_RND_WORKAROUND
+    function void post_randomize();
+        bit [23:0] data_in_fix;
+        bit [23:0] master_key_fix_1;
+        bit [23:0] master_key_fix_2;
+        int unsigned i = 0;
+        super.post_randomize();
+        data_in_fix = $urandom_range('hFF_FFFF, 0);
+        master_key_fix_1 = $urandom_range('hFF_FFFF, 0);
+        master_key_fix_2 = $urandom_range('hFF_FFFF, 0);
+        for (i = 0; i < 4; i = i + 1)  begin
+            data_in[i*32+30 -: 2] = data_in_fix[i*3+2 -: 2];
+            master_key[i*32+30 -: 2] = master_key_fix_1[i*3+2 -: 2];
+            master_key[128+i*32+30 -: 2] = master_key_fix_2[i*3+2 -: 2];
+        end
+    endfunction
+    `endif
+
     `ifdef HIER_ACCESS
     // to avoid registering the whole array of round keys
     // but copy has to be implemented separately for round keys

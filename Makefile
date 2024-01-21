@@ -1,7 +1,7 @@
 TOP := top
 SOURCE_FILES_SV := $(REPO_ROOT)/sources_sv.f
 SOURCE_FILES_VHD := $(REPO_ROOT)/sources_vhd.f
-VERILOG_DEFINES := -d HIER_ACCESS
+VERILOG_DEFINES := -d HIER_ACCESS -d VIVADO_RND_WORKAROUND
 COMP_OPTS_SV := -sv --incr --relax  -L uvm -L uvm
 COMP_OPTS_VHD := --incr --relax
 DPI_ROOT := $(REPO_ROOT)/aes-256_model
@@ -35,20 +35,20 @@ compile: .compile.touchfile
 	xvlog $(COMP_OPTS_SV) -prj $(SOURCE_FILES_SV) $(VERILOG_DEFINES) > /dev/null 2>&1
 	@echo "Compiling VHDL"
 	xvhdl $(COMP_OPTS_VHD) -prj $(SOURCE_FILES_VHD) > /dev/null 2>&1
-	touch .compile.touchfile
+	@touch .compile.touchfile
 	@echo "RTL compilation done"
 
 elab: .elab.touchfile
 .elab.touchfile: .compile.touchfile $(DPI_OUT)
 	@echo "Elaborating design"
 	xelab $(TOP) $(ELAB_OPTS) $(VERILOG_DEFINES) > /dev/null 2>&1
-	touch .elab.touchfile
+	@touch .elab.touchfile
 	@echo "Elaboration done"
 
 sim: .elab.touchfile
 	@echo "Running simulation"
 	xsim $(TOP) -tclbatch $(TCLBATCH) -testplusarg UVM_VERBOSITY=$(UVM_VERBOSITY) -testplusarg UVM_TESTNAME=$(UVM_TESTNAME) -sv_seed $(SEED) -stats -onerror quit -testplusarg EXIT_ON_ERROR -testplusarg $(FUNC_COV) -log test.log > /dev/null 2>&1
-	touch .sim.touchfile
+	@touch .sim.touchfile
 	@echo "Simulation done"
 
 coverage:

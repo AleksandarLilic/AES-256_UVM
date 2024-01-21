@@ -94,7 +94,9 @@ def main():
     if args.keep_build and os.path.exists(f"{build_dir}/.elab.touchfile"):
         print(f"Reusing existing build directory at <{build_dir}>")
     else:
-        os.makedirs(build_dir, exist_ok=True)
+        if os.path.exists(build_dir):
+            shutil.rmtree(build_dir)
+        os.makedirs(build_dir)
         makefile_path = os.path.join(os.getcwd(), "Makefile")
         linked_makefile_path = os.path.join(build_dir, "Makefile")
         os.symlink(makefile_path, linked_makefile_path)

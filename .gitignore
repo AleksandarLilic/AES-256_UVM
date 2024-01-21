@@ -29,3 +29,7 @@ xcrg_*_cov_report
 
 # VSCode files
 .vscode/
+
+# run dirs
+aes_test*/
+aestest*/

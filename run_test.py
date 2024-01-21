@@ -84,7 +84,7 @@ def main():
         run_dir = args.rundir
     else:
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        run_dir = f"run_{timestamp}"
+        run_dir = f"aes_test_{timestamp}"
     
     if not os.path.exists(run_dir):
         os.makedirs(run_dir)

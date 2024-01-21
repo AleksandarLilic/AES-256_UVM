@@ -6,6 +6,7 @@ import argparse
 import multiprocessing
 import functools
 import json
+import random
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run RTL simulation.')
@@ -15,6 +16,7 @@ def parse_args():
     parser.add_argument('--keep-build', action='store_true', help='Reuse existing build directory if available')
     parser.add_argument('-j', '--jobs', type=int, default=os.cpu_count(), help='Number of parallel jobs to run (default: number of CPU cores)')
     parser.add_argument('--coverage', action='store_true', help='Enable coverage analysis')
+    parser.add_argument('--seed', type=int, help='Seed value for the tests')
     return parser.parse_args()
 
 def read_tests_from_json(file_path):
@@ -27,12 +29,13 @@ def validate_tests(tests, valid_tests):
         raise ValueError(f"Invalid tests specified: {', '.join(invalid_tests)}")
     return tests
 
-def run_test(test_name, run_dir, build_dir):
+def run_test(test_name, run_dir, build_dir, seed=None):
     test_dir = os.path.join(run_dir, f"test_{test_name}")
     if os.path.exists(test_dir):
         shutil.rmtree(test_dir)
     shutil.copytree(build_dir, test_dir, symlinks=True)
-    subprocess.run(["make", "sim", f"UVM_TESTNAME={test_name}"], cwd=test_dir)
+    test_seed = seed if seed is not None else random.randint(0, 2**32 - 1)
+    subprocess.run(["make", "sim", f"UVM_TESTNAME={test_name}", f"SEED={test_seed}"], cwd=test_dir)
     # write to test.status
     status_file_path = os.path.join(test_dir, "test.status")
     with open(status_file_path, 'w') as status_file:
@@ -104,9 +107,10 @@ def main():
         subprocess.run(["make", "elab"], cwd=build_dir)
 
     # run tests in parallel
+    random.seed(5)
     with multiprocessing.Pool(args.jobs) as pool:
-        # create a partial function with fixed run_dir and build_dir
-        partial_run_test = functools.partial(run_test, run_dir=run_dir, build_dir=build_dir)
+        # create a partial function with all fixed arguments except test_name
+        partial_run_test = functools.partial(run_test, run_dir=run_dir, build_dir=build_dir, seed=args.seed)
         pool.map(partial_run_test, all_tests)
     
     # check test suite results

@@ -50,6 +50,11 @@ typedef enum bit [2:0] {
     ENC_WAIT_FOR_LOADING_END = 3,
     ENC_RANDOM = 4
 } enc_delay_mode_t;
+typedef enum bit [1:0] {
+    SWEEP_TYPE_NONE = 0,
+    SWEEP_TYPE_KEY = 1,
+    SWEEP_TYPE_PT = 2
+} sweep_type_t;
 
 // Macros
 `define SEND_ITEM(item, print) \

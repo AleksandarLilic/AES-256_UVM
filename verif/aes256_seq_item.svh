@@ -13,6 +13,9 @@ class aes256_seq_item extends uvm_sequence_item;
     `ifdef HIER_ACCESS
     bit [0:14] [127:0] key_exp_round_keys;
     `endif
+    `ifdef VIVADO_RND_WORKAROUND
+    sweep_type_t sweep_type;
+    `endif
     // TODO
     // vector expected_data_out;
     // bit [127:0] expected_data_out;
@@ -55,18 +58,20 @@ class aes256_seq_item extends uvm_sequence_item;
 
     `ifdef VIVADO_RND_WORKAROUND
     function void post_randomize();
-        bit [23:0] data_in_fix;
-        bit [23:0] master_key_fix_1;
-        bit [23:0] master_key_fix_2;
-        int unsigned i = 0;
-        super.post_randomize();
-        data_in_fix = $urandom_range('hFF_FFFF, 0);
-        master_key_fix_1 = $urandom_range('hFF_FFFF, 0);
-        master_key_fix_2 = $urandom_range('hFF_FFFF, 0);
-        for (i = 0; i < 4; i = i + 1)  begin
-            data_in[i*32+30 -: 2] = data_in_fix[i*3+2 -: 2];
-            master_key[i*32+30 -: 2] = master_key_fix_1[i*3+2 -: 2];
-            master_key[128+i*32+30 -: 2] = master_key_fix_2[i*3+2 -: 2];
+        if (sweep_type == SWEEP_TYPE_NONE) begin
+            bit [23:0] data_in_fix;
+            bit [23:0] master_key_fix_1;
+            bit [23:0] master_key_fix_2;
+            int unsigned i = 0;
+            super.post_randomize();
+            data_in_fix = $urandom_range('hFF_FFFF, 0);
+            master_key_fix_1 = $urandom_range('hFF_FFFF, 0);
+            master_key_fix_2 = $urandom_range('hFF_FFFF, 0);
+            for (i = 0; i < 4; i = i + 1)  begin
+                data_in[i*32+30 -: 2] = data_in_fix[i*3+2 -: 2];
+                master_key[i*32+30 -: 2] = master_key_fix_1[i*3+2 -: 2];
+                master_key[128+i*32+30 -: 2] = master_key_fix_2[i*3+2 -: 2];
+            end
         end
     endfunction
     `endif

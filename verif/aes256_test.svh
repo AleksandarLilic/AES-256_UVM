@@ -237,3 +237,43 @@ class aes256_test_interrupts extends aes256_test_base;
     phase.drop_objection(this);
     endtask: run_phase
 endclass: aes256_test_interrupts
+
+class aes256_test_sweep_key extends aes256_test_base;
+    `uvm_component_utils(aes256_test_sweep_key)
+
+    function new (string name = "aes256_test_sweep_key", uvm_component parent = null);
+        super.new(name, parent);
+    endfunction
+
+    task run_phase(uvm_phase phase);
+        aes256_sequence_sweep seq;
+        phase.raise_objection(this);
+        #10;
+        
+        seq = aes256_sequence_sweep::type_id::create("seq");
+        seq.sweep_type = SWEEP_TYPE_KEY;
+        seq.start(env.agent_1.sequencer_1);
+
+        phase.drop_objection(this);
+    endtask: run_phase
+endclass: aes256_test_sweep_key
+
+class aes256_test_sweep_pt extends aes256_test_base;
+    `uvm_component_utils(aes256_test_sweep_pt)
+
+    function new (string name = "aes256_test_sweep_pt", uvm_component parent = null);
+        super.new(name, parent);
+    endfunction
+
+    task run_phase(uvm_phase phase);
+        aes256_sequence_sweep seq;
+        phase.raise_objection(this);
+        #10;
+        
+        seq = aes256_sequence_sweep::type_id::create("seq");
+        seq.sweep_type = SWEEP_TYPE_PT;
+        seq.start(env.agent_1.sequencer_1);
+
+        phase.drop_objection(this);
+    endtask: run_phase
+endclass: aes256_test_sweep_pt

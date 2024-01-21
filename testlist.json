@@ -3,5 +3,7 @@
     "aes256_test_max_throughput",
     "aes256_test_key_gen",
     "aes256_test_delays",
-    "aes256_test_interrupts"
+    "aes256_test_interrupts",
+    "aes256_test_sweep_key",
+    "aes256_test_sweep_pt"
 ]

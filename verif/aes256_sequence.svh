@@ -2,8 +2,8 @@ import uvm_pkg::*;
 `include "aes256_inc.svh"
 
 class aes256_sequence extends uvm_sequence#(aes256_seq_item);
-    rand int number_of_keys = 1;
-    rand int number_of_plaintexts = 2;
+    rand int unsigned number_of_keys = 1;
+    rand int unsigned number_of_plaintexts = 2;
     bool_t wait_for_key_ready = TRUE;
     bool_t wait_for_enc_done = TRUE;
     bool_t key_exp_wait_for_loading_end = TRUE;
@@ -36,6 +36,7 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
 
     virtual task body();
         aes256_seq_item item;
+        bit [255:0] current_master_key;
         int unsigned key_cnt = 0;
         int unsigned pt_cnt = 0;
         bit rnd_status = 'b0;
@@ -44,6 +45,9 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
             rnd_status = 'b0;
             `uvm_info(get_type_name(), $sformatf(" ===> New Master Key. Count: %0d <===", key_cnt), UVM_MEDIUM)
             item = aes256_seq_item::type_id::create($sformatf("item_%0d_%0d", key_cnt, pt_cnt));
+            `ifdef VIVADO_RND_WORKAROUND
+            item.sweep_type = SWEEP_TYPE_NONE;
+            `endif
             item.key_expand_start = 1;
             item.next_val_req = 0;
             item.wait_for_key_ready = this.wait_for_key_ready;
@@ -57,10 +61,7 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
             assert(rnd_status) else `uvm_fatal(get_type_name(), "Randomization failed")
             `SEND_ITEM(item, 0);
             
-            // TODO: prevend repeated randomization of the master key to avoid confusion
-            // has no impact either way
-            // current_master_key = item.master_key;
-            // randomize with { master_key == current_master_key; };
+            current_master_key = item.master_key;
             for (pt_cnt = 0; pt_cnt < number_of_plaintexts; pt_cnt++) begin
                 rnd_status = 'b0;
                 `uvm_info(get_type_name(), $sformatf(" ===> New Plaintext. Count: %0d <===", pt_cnt), UVM_MEDIUM)
@@ -68,11 +69,11 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
                 item.next_val_req = 1;
                 item.wait_for_enc_done = this.wait_for_enc_done;
                 case (enc_delay_mode)
-                    ENC_NO_DELAY: rnd_status = item.randomize() with { next_val_req_delay == 1; next_val_req_pulse == 1;};
-                    ENC_WITH_DELAY: rnd_status = item.randomize() with { next_val_req_delay > 1; };
-                    ENC_OVERLAP_W_LOADING: rnd_status = item.randomize() with { next_val_req_delay inside {[1:LOADING_CYCLES]}; };
-                    ENC_WAIT_FOR_LOADING_END: rnd_status = item.randomize() with { next_val_req_delay > LOADING_CYCLES; };
-                    ENC_RANDOM: rnd_status = item.randomize();
+                    ENC_NO_DELAY: rnd_status = item.randomize() with { next_val_req_delay == 1; next_val_req_pulse == 1; master_key == current_master_key; };
+                    ENC_WITH_DELAY: rnd_status = item.randomize() with { next_val_req_delay > 1; master_key == current_master_key; };
+                    ENC_OVERLAP_W_LOADING: rnd_status = item.randomize() with { next_val_req_delay inside {[1:LOADING_CYCLES]}; master_key == current_master_key; };
+                    ENC_WAIT_FOR_LOADING_END: rnd_status = item.randomize() with { next_val_req_delay > LOADING_CYCLES; master_key == current_master_key; };
+                    ENC_RANDOM: rnd_status = item.randomize() with { master_key == current_master_key; };
                     default: `uvm_fatal(get_type_name(), "Unknown delay mode")
                 endcase
                 assert(rnd_status) else `uvm_fatal(get_type_name(), "Randomization failed")

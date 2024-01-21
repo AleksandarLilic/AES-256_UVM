@@ -34,6 +34,8 @@ initial begin
     run_test("aes256_test_key_gen");
     run_test("aes256_test_delays");
     run_test("aes256_test_interrupts");
+    run_test("aes256_test_sweep_key");
+    run_test("aes256_test_sweep_pt");
 end
 
 endmodule

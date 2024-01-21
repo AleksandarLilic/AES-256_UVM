@@ -2,6 +2,7 @@ import uvm_pkg::*;
 
 `include "aes256_seq_item.svh"
 `include "aes256_sequence.svh"
+`include "aes256_sequence_sweep.svh"
 `include "aes256_driver.svh"
 `include "aes256_monitor.svh"
 

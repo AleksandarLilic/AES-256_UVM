@@ -277,3 +277,44 @@ class aes256_test_sweep_pt extends aes256_test_base;
         phase.drop_objection(this);
     endtask: run_phase
 endclass: aes256_test_sweep_pt
+
+class aes256_test_ref_vectors extends aes256_test_base;
+    `uvm_component_utils(aes256_test_ref_vectors)
+    integer fd_seq;
+    integer fd_scbd;
+    string line;
+    string ref_vectors_path;
+
+    function new (string name = "aes256_test_ref_vectors", uvm_component parent = null);
+        super.new(name, parent);
+    endfunction
+
+    task run_phase(uvm_phase phase);
+        aes256_sequence_ref_vectors seq;
+        phase.raise_objection(this);
+        #10;
+        
+        if (! $value$plusargs("ref_vectors_path=%s", ref_vectors_path))
+            `uvm_fatal(get_type_name(), "ref_vectors_path not defined");
+        
+        fd_seq = $fopen(ref_vectors_path, "r");
+        if (fd_seq == 0)
+            `uvm_fatal(get_type_name(), $sformatf("Error: Unable to open file: %s", ref_vectors_path));
+        void'($fgets(line, fd_seq)); // skip header line
+        
+        fd_scbd = $fopen(ref_vectors_path, "r");
+        if (fd_scbd == 0)
+            `uvm_fatal(get_type_name(), $sformatf("Error: Unable to open file: %s", ref_vectors_path));
+        void'($fgets(line, fd_scbd)); // skip header line
+        
+        seq = aes256_sequence_ref_vectors::type_id::create("seq");
+        seq.fd_vector = fd_seq;
+        env.scbd.use_ref_vectors = TRUE;
+        env.scbd.fd_vector = fd_scbd;
+        seq.start(env.agent_1.sequencer_1);
+        
+        phase.drop_objection(this);
+        $fclose(fd_seq);
+        $fclose(fd_scbd);
+    endtask: run_phase
+endclass: aes256_test_ref_vectors

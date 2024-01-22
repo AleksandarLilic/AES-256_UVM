@@ -18,6 +18,12 @@ class aes256_scoreboard extends uvm_scoreboard;
     bit [127:0] model_data_out;
     bit [0:14] [127:0] model_round_keys;
     int unsigned error_count = 0;
+    bool_t use_ref_vectors = FALSE;
+    integer fd_vector;
+    string line;
+    bit [255:0] ref_master_key;
+    bit [127:0] ref_data_in;
+    bit [127:0] ref_data_out;
 
     function new(string name = "aes256_scoreboard", uvm_component parent = null);
         super.new(name, parent);
@@ -47,29 +53,53 @@ class aes256_scoreboard extends uvm_scoreboard;
         // compare results
         `ifdef HIER_ACCESS
         assert (model_round_keys == item.key_exp_round_keys) else begin
-            `uvm_error(get_type_name(), $sformatf("Key expansion mismatch"))
+            `uvm_error(get_type_name(), $sformatf("Model checker FAILED. Key expansion mismatch"))
             for (int i = 0; i < 15; i++) begin
                 if (model_round_keys[i] != item.key_exp_round_keys[i])
                     `uvm_info(get_type_name(), $sformatf("Round key %2d: expected 'h%32h, received 'h%32h", i, model_round_keys[i], item.key_exp_round_keys[i]), UVM_NONE)
             end
             error_count += 1;
-            if ($test$plusargs("EXIT_ON_ERROR")) $finish();
         end
         `endif
 
         assert (model_data_out == item.data_out) else begin
-            `uvm_error(get_type_name(), $sformatf("Ciphertext mismatch: expected 'h%0h, received 'h%0h", model_data_out, item.data_out))
+            `uvm_error(get_type_name(), $sformatf("Model checker FAILED. Ciphertext mismatch: expected 'h%0h, received 'h%0h", model_data_out, item.data_out))
             `uvm_info(get_type_name(), $sformatf("Entire packet:\n%s", item.sprint()), UVM_NONE)
             error_count += 1;
-            // UVM is compiled with NO_DPI so can't use +UVM_MAX_QUIT_COUNT=1
-            // workaround: use $finish and $plusargs to specify before simulation starts
-            if ($test$plusargs("EXIT_ON_ERROR")) $finish();
         end
+
+        if (use_ref_vectors == TRUE) begin
+            if (!$feof(fd_vector)) begin
+                void'($fgets(line, fd_vector));
+                $sscanf(line, "%h,%h,%h", ref_master_key, ref_data_in, ref_data_out);
+                assert (ref_master_key == item.master_key) else begin
+                    `uvm_error(get_type_name(), $sformatf("Vector checker input FAILED. Master key mismatch: expected 'h%0h, received 'h%0h", ref_master_key, item.master_key))
+                    error_count += 1;
+                end
+                assert (ref_data_in == item.data_in) else begin
+                    `uvm_error(get_type_name(), $sformatf("Vector checker input FAILED. Plaintext mismatch: expected 'h%0h, received 'h%0h", ref_data_in, item.data_in))
+                    error_count += 1;
+                end
+                assert (ref_data_out == item.data_out) else begin
+                    `uvm_error(get_type_name(), $sformatf("Vector checker output FAILED. Ciphertext mismatch: expected 'h%0h, received 'h%0h", ref_data_out, item.data_out))
+                    error_count += 1;
+                end
+            end else begin
+                `uvm_error(get_type_name(), "Vector checker FAILED. End of reference vectors file reached but more items expected")
+                error_count += 1;
+            end
+        end
+
+        // UVM is compiled with NO_DPI so can't use +UVM_MAX_QUIT_COUNT=1
+        // workaround: use $finish and $plusargs to specify before simulation starts
+        if (error_count > 0 && $test$plusargs("EXIT_ON_ERROR")) $finish();
     endfunction
 
     function void report_phase(uvm_phase phase);
         `uvm_info(get_type_name(), $sformatf("Number of items received: %0d", num_items), UVM_NONE)
-        if (error_count == 0) begin
+        if (num_items == 0) begin
+            `uvm_warning(get_type_name(), "No items received. Check the test and sequence")
+        end else if (error_count == 0) begin
             `uvm_info(get_type_name(), "\n\n==== PASS ====\n\n", UVM_NONE)
         end else begin
             `uvm_info(get_type_name(), $sformatf("Total number of errors: %0d", error_count), UVM_NONE)

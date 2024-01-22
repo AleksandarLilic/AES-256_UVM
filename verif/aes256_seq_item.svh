@@ -16,9 +16,6 @@ class aes256_seq_item extends uvm_sequence_item;
     `ifdef VIVADO_RND_WORKAROUND
     sweep_type_t sweep_type;
     `endif
-    // TODO
-    // vector expected_data_out;
-    // bit [127:0] expected_data_out;
     // timing relationships
     rand byte unsigned key_expand_start_pulse;
     rand byte unsigned key_expand_start_delay;

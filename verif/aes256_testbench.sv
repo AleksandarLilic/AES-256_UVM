@@ -36,6 +36,7 @@ initial begin
     run_test("aes256_test_interrupts");
     run_test("aes256_test_sweep_key");
     run_test("aes256_test_sweep_pt");
+    run_test("aes256_test_ref_vectors");
 end
 
 endmodule

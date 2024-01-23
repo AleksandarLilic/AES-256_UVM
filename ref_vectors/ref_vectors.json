@@ -1,0 +1,12 @@
+{
+    "test_name": "aes256_test_ref_vectors",
+    "vectors": [
+        "vectors_base",
+        "vectors_edge_cases",
+        "vectors_NIST_examples256",
+        "vectors_NIST_GFSbox256",
+        "vectors_NIST_KeySbox256",
+        "vectors_NIST_VarKey256",
+        "vectors_NIST_VarTxt256"
+    ]
+}

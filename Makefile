@@ -10,6 +10,8 @@ DPI_OUT := aes_dpi.so
 DPI_LOG := aes_dpi.log
 ELAB_DEBUG := typical
 ELAB_OPTS := -debug $(ELAB_DEBUG) --incr --relax -L uvm -sv_lib $(DPI_OUT) -cc_type t --mt 8
+SIM_PLUSARGS := 
+REF_VECTORS := $(REPO_ROOT)/ref_vectors/vectors_base.csv
 
 TCLBATCH := $(REPO_ROOT)/run_cfg.tcl
 UVM_VERBOSITY := UVM_LOW
@@ -47,9 +49,13 @@ elab: .elab.touchfile
 
 sim: .elab.touchfile
 	@echo "Running simulation"
-	xsim $(TOP) -tclbatch $(TCLBATCH) -testplusarg UVM_VERBOSITY=$(UVM_VERBOSITY) -testplusarg UVM_TESTNAME=$(UVM_TESTNAME) -sv_seed $(SEED) -stats -onerror quit -testplusarg EXIT_ON_ERROR -testplusarg $(FUNC_COV) -log test.log > /dev/null 2>&1
+	xsim $(TOP) -tclbatch $(TCLBATCH) -testplusarg UVM_VERBOSITY=$(UVM_VERBOSITY) -testplusarg UVM_TESTNAME=$(UVM_TESTNAME) -sv_seed $(SEED) -stats -onerror quit -testplusarg EXIT_ON_ERROR -testplusarg $(FUNC_COV) $(SIM_PLUSARGS) -log test.log > /dev/null 2>&1
 	@touch .sim.touchfile
 	@echo "Simulation done"
+	@grep "PASS\|FAIL" test.log
+
+sim_vec:
+	$(MAKE) sim UVM_TESTNAME=aes256_test_ref_vectors SIM_PLUSARGS='-testplusarg ref_vectors_path=$(REF_VECTORS)'
 
 coverage:
 	xcrg -cc_dir $(CODE_COV_DB_PATH) -report_format html -dir $(FUNC_COV_DB_PATH) 

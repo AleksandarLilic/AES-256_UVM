@@ -77,4 +77,8 @@ typedef enum bit [1:0] {
 //    `uvm_info(get_type_name(), $sformatf("\n%s", item.sprint()), UVM_HIGH); \
 //    finish_item(item);
 
+`define PRINT_SCBD_ERROR(msg) \
+    `uvm_error(get_type_name(), msg); \
+    `uvm_info(get_type_name(), $sformatf("Entire packet:\n%s", item.sprint()), UVM_NONE)
+
 `endif

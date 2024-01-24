@@ -24,6 +24,7 @@ class aes256_scoreboard extends uvm_scoreboard;
     bit [255:0] ref_master_key;
     bit [127:0] ref_data_in;
     bit [127:0] ref_data_out;
+    string ref_data_out_str;
 
     function new(string name = "aes256_scoreboard", uvm_component parent = null);
         super.new(name, parent);
@@ -53,7 +54,7 @@ class aes256_scoreboard extends uvm_scoreboard;
         // compare results
         `ifdef HIER_ACCESS
         assert (model_round_keys == item.key_exp_round_keys) else begin
-            `uvm_error(get_type_name(), $sformatf("Model checker FAILED. Key expansion mismatch"))
+            `PRINT_SCBD_ERROR($sformatf("Model checker FAILED. Key expansion mismatch"))
             for (int i = 0; i < 15; i++) begin
                 if (model_round_keys[i] != item.key_exp_round_keys[i])
                     `uvm_info(get_type_name(), $sformatf("Round key %2d: expected 'h%32h, received 'h%32h", i, model_round_keys[i], item.key_exp_round_keys[i]), UVM_NONE)
@@ -63,26 +64,38 @@ class aes256_scoreboard extends uvm_scoreboard;
         `endif
 
         assert (model_data_out == item.data_out) else begin
-            `uvm_error(get_type_name(), $sformatf("Model checker FAILED. Ciphertext mismatch: expected 'h%0h, received 'h%0h", model_data_out, item.data_out))
-            `uvm_info(get_type_name(), $sformatf("Entire packet:\n%s", item.sprint()), UVM_NONE)
+            `PRINT_SCBD_ERROR($sformatf("Model checker FAILED. Ciphertext mismatch: expected 'h%0h, received 'h%0h", model_data_out, item.data_out))
             error_count += 1;
         end
 
         if (use_ref_vectors == TRUE) begin
             if (!$feof(fd_vector)) begin
                 void'($fgets(line, fd_vector));
+
+                // can't convert str to 128-bit value with str.atohex() as this returns 32-bit value
+                $sscanf(line, "%h,%h,%s", ref_master_key, ref_data_in, ref_data_out_str);
                 $sscanf(line, "%h,%h,%h", ref_master_key, ref_data_in, ref_data_out);
+                
                 assert (ref_master_key == item.master_key) else begin
-                    `uvm_error(get_type_name(), $sformatf("Vector checker input FAILED. Master key mismatch: expected 'h%0h, received 'h%0h", ref_master_key, item.master_key))
+                    `PRINT_SCBD_ERROR($sformatf("Vector checker input FAILED. Master key mismatch: expected 'h%0h, received 'h%0h", ref_master_key, item.master_key))
                     error_count += 1;
                 end
+
                 assert (ref_data_in == item.data_in) else begin
-                    `uvm_error(get_type_name(), $sformatf("Vector checker input FAILED. Plaintext mismatch: expected 'h%0h, received 'h%0h", ref_data_in, item.data_in))
+                    `PRINT_SCBD_ERROR($sformatf("Vector checker input FAILED. Plaintext mismatch: expected 'h%0h, received 'h%0h", ref_data_in, item.data_in))
                     error_count += 1;
                 end
-                assert (ref_data_out == item.data_out) else begin
-                    `uvm_error(get_type_name(), $sformatf("Vector checker output FAILED. Ciphertext mismatch: expected 'h%0h, received 'h%0h", ref_data_out, item.data_out))
+
+                if ($test$plusargs("ALLOW_VECTOR_CHECKER_NONE") && ref_data_out_str == "NONE") begin
+                    `uvm_info(get_type_name(), "Vector checker output: no output expected", UVM_HIGH)
+                end else if (ref_data_out_str == "NONE") begin
+                    `uvm_error(get_type_name(), "Vector checker output: NONE specified for ciphertext but +ALLOW_VECTOR_CHECKER_NONE not specified. Can't compare outputs")
                     error_count += 1;
+                end else begin
+                    assert (ref_data_out == item.data_out) else begin
+                        `PRINT_SCBD_ERROR($sformatf("Vector checker output FAILED. Ciphertext mismatch: expected 'h%0h, received 'h%0h", ref_data_out, item.data_out))
+                        error_count += 1;
+                    end
                 end
             end else begin
                 `uvm_error(get_type_name(), "Vector checker FAILED. End of reference vectors file reached but more items expected")
@@ -91,8 +104,11 @@ class aes256_scoreboard extends uvm_scoreboard;
         end
 
         // UVM is compiled with NO_DPI so can't use +UVM_MAX_QUIT_COUNT=1
-        // workaround: use $finish and $plusargs to specify before simulation starts
-        if (error_count > 0 && $test$plusargs("EXIT_ON_ERROR")) $finish();
+        // workaround: use $finish and $plusargs to specify exit on error before simulation start
+        if (error_count > 0 && $test$plusargs("EXIT_ON_ERROR")) begin
+            `uvm_fatal(get_type_name(), "\n\n==== FAIL ====\n\n")
+            $finish();
+        end
     endfunction
 
     function void report_phase(uvm_phase phase);

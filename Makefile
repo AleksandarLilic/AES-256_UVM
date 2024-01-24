@@ -56,7 +56,7 @@ sim: .elab.touchfile
 	@grep "PASS\|FAIL" test.log
 
 sim_vec:
-	$(MAKE) sim UVM_TESTNAME=aes256_test_ref_vectors SIM_PLUSARGS='-testplusarg ref_vectors_path=$(REF_VECTORS_PATH)/$(REF_VECTORS)'
+	$(MAKE) sim UVM_TESTNAME=aes256_test_ref_vectors SIM_PLUSARGS='-testplusarg ref_vectors_path=$(REF_VECTORS_PATH)/$(REF_VECTORS) -testplusarg ALLOW_VECTOR_CHECKER_NONE'
 
 coverage:
 	xcrg -cc_dir $(CODE_COV_DB_PATH) -report_format html -dir $(FUNC_COV_DB_PATH) 

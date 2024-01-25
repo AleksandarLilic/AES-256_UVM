@@ -45,9 +45,9 @@ class aes256_seq_item extends uvm_sequence_item;
     `uvm_object_utils_end
 
     constraint c_key_expand_start_delay { key_expand_start_delay inside { [0:32] }; }
-    constraint c_key_expand_start_pulse { key_expand_start_pulse inside { [1:8] }; }
+    constraint c_key_expand_start_pulse { soft key_expand_start_pulse inside { [1:8] }; }
     constraint c_next_val_req_delay { next_val_req_delay inside { [0:2*LOADING_CYCLES] }; }
-    constraint c_next_val_req_pulse { next_val_req_pulse inside { [1:8] }; }
+    constraint c_next_val_req_pulse { soft next_val_req_pulse inside { [1:8] }; }
     
     function new (string name = "aes256_seq_item");
         super.new(name);

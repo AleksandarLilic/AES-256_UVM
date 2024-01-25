@@ -48,14 +48,16 @@ typedef enum bit { UVM_PASSIVE = 0, UVM_ACTIVE = 1 } uvm_active_passive_enum;
 typedef enum bit [1:0] {
     EXP_NO_DELAY = 0,
     EXP_WITH_DELAY = 1,
-    EXP_RANDOM = 2
+    EXP_RANDOM = 2,
+    EXP_RANDOM_LONG_PULSE = 3
 } exp_delay_mode_t;
 typedef enum bit [2:0] {
     ENC_NO_DELAY = 0,
     ENC_WITH_DELAY = 1,
     ENC_OVERLAP_W_LOADING = 2,
     ENC_WAIT_FOR_LOADING_END = 3,
-    ENC_RANDOM = 4
+    ENC_RANDOM = 4,
+    ENC_RANDOM_LONG_PULSE = 5
 } enc_delay_mode_t;
 typedef enum bit [1:0] {
     SWEEP_TYPE_NONE = 0,

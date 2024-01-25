@@ -4,14 +4,14 @@ import uvm_pkg::*;
 class aes256_seq_item extends uvm_sequence_item;
     // design inputs
     bit key_expand_start = 0;
-    rand bit [255:0] master_key = 0;
+    rand bit [`MATRIX_KEY_WIDTH-1:0] master_key = 0;
     bit next_val_req = 0;
-    rand bit [127:0] data_in = 0;
+    rand bit [`MATRIX_DATA_WIDTH-1:0] data_in = 0;
     // design outputs
     bit next_val_ready;
     bit [15:0] [7:0] data_out;
     `ifdef HIER_ACCESS
-    bit [0:14] [127:0] key_exp_round_keys;
+    bit [0:`N_ROUNDS-1] [`MATRIX_ROUND_KEY_WIDTH-1:0] key_exp_round_keys;
     `endif
     `ifdef VIVADO_RND_WORKAROUND
     sweep_type_t sweep_type;

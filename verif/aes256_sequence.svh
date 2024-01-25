@@ -36,7 +36,7 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
 
     virtual task body();
         aes256_seq_item item;
-        bit [255:0] current_master_key;
+        bit [`MATRIX_KEY_WIDTH-1:0] current_master_key;
         int unsigned key_cnt = 0;
         int unsigned pt_cnt = 0;
         bit rnd_status = 'b0;

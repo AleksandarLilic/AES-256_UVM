@@ -1,5 +1,7 @@
 `timescale 1ns/1ns
 
+`include "aes256_inc.svh"
+
 module aes256_loading_wrap(
     aes256_if aes256_if_conn
 );
@@ -32,25 +34,25 @@ aes256_loading aes256_loading_i(
 
     // key expansion module
     // TODO: add key_exp enable logic based on the TB signals and use that to sample key_exp in addition to !key_ready
-    logic [255:0] master_key;
+    logic [`MATRIX_KEY_WIDTH-1:0] master_key;
     logic [2:0] key_exp_pr_state;
     logic [5:0] key_exp_cnt;
     logic key_exp_cnt_en;
-    logic [31:0] key_parser_cr_word_out;
-    logic [31:0] key_parser_pr_word_out;
+    logic [`WORD_WIDTH-1:0] key_parser_cr_word_out;
+    logic [`WORD_WIDTH-1:0] key_parser_pr_word_out;
     logic key_parser_en;
-    logic [31:0] rot_word_in;
-    logic [31:0] rot_word_out;
+    logic [`WORD_WIDTH-1:0] rot_word_in;
+    logic [`WORD_WIDTH-1:0] rot_word_out;
     logic rot_word_en;
-    logic [31:0] sub_word_in;
-    logic [31:0] sub_word_out;
+    logic [`WORD_WIDTH-1:0] sub_word_in;
+    logic [`WORD_WIDTH-1:0] sub_word_out;
     logic sub_word_en;
-    logic [31:0] rcon_out;
-    logic [7:0] lut_rcon_in; // full range
-    logic [31:0] lut_rcon_out; // can cover only specific bins
+    logic [`WORD_WIDTH-1:0] rcon_out;
+    logic [7:0] lut_rcon_in;
+    logic [`WORD_WIDTH-1:0] lut_rcon_out;
     logic rcon_en;
-    logic [31:0] xor_sync_in_1;
-    logic [31:0] xor_sync_out;
+    logic [`WORD_WIDTH-1:0] xor_sync_in_1;
+    logic [`WORD_WIDTH-1:0] xor_sync_out;
     logic xor_sync_en;
     assign master_key = `KEY_EXP_TOP.pi_master_key;
     assign key_exp_pr_state = `KEY_EXP_TOP.FSM_KEY_EXPANSION_1.pr_state_logic;
@@ -74,26 +76,26 @@ aes256_loading aes256_loading_i(
     assign xor_sync_en = `KEY_EXP_TOP.XOR_1.pi_enable;
 
     // encryption module
-    logic [127:0] enc_data_in;
-    logic [127:0] enc_data_out;
+    logic [`MATRIX_DATA_WIDTH-1:0] enc_data_in;
+    logic [`MATRIX_DATA_WIDTH-1:0] enc_data_out;
     logic [2:0] enc_pr_state;
     logic [3:0] enc_cnt;
     logic enc_cnt_en;
-    logic [127:0] sub_bytes_out;
+    logic [`MATRIX_DATA_WIDTH-1:0] sub_bytes_out;
     logic [7:0] sbox_in;
     logic [7:0] sbox_out;
     logic sub_bytes_en;
-    logic [127:0] shift_rows_out;
+    logic [`MATRIX_DATA_WIDTH-1:0] shift_rows_out;
     logic shift_rows_en;
-    logic [127:0] mix_columns_out;
+    logic [`MATRIX_DATA_WIDTH-1:0] mix_columns_out;
     logic [7:0] lut_lmul2_in;
     logic [7:0] lut_lmul2_out;
     logic [7:0] lut_lmul3_in;
     logic [7:0] lut_lmul3_out;
     logic mix_columns_en;
-    logic [127:0] add_round_key_in; 
-    logic [127:0] add_round_key_round_key_in; 
-    logic [127:0] add_round_key_out; 
+    logic [`MATRIX_DATA_WIDTH-1:0] add_round_key_in; 
+    logic [`MATRIX_ROUND_KEY_WIDTH-1:0] add_round_key_round_key_in; 
+    logic [`MATRIX_DATA_WIDTH-1:0] add_round_key_out; 
     logic add_round_key_en;
 
     assign enc_data_in = `ENC_TOP.pi_data;
@@ -134,14 +136,14 @@ interface aes256_if;
     logic clk;
     logic rst;
     logic key_expand_start;
-    logic [255:0] master_key;
+    logic [`MATRIX_KEY_WIDTH-1:0] master_key;
     logic key_ready;
     logic next_val_req;
-    logic [127:0] data_in;
+    logic [`MATRIX_DATA_WIDTH-1:0] data_in;
     logic enc_done;
     logic next_val_ready;
     logic [7:0] data_out;
     `ifdef HIER_ACCESS
-    logic [0:14] [127:0] key_exp_round_keys;
+    logic [0:`N_ROUNDS-1] [`MATRIX_ROUND_KEY_WIDTH-1:0] key_exp_round_keys;
     `endif
 endinterface: aes256_if

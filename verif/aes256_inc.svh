@@ -1,6 +1,13 @@
 `ifndef _AES256_INC_SVH
 `define _AES256_INC_SVH
 
+// Design consts
+`define MATRIX_DATA_WIDTH 128
+`define MATRIX_ROUND_KEY_WIDTH 128
+`define MATRIX_KEY_WIDTH 256
+`define WORD_WIDTH 32
+`define N_ROUNDS 15
+
 // Consts
 const shortint unsigned LOADING_CYCLES = 16; // takes 16 clocks to load one ciphertext block
 const shortint unsigned KEY_EXP_CYCLES = 84; // takes 84 clocks to expand one key

@@ -18,8 +18,8 @@ class aes256_sequence_sweep extends uvm_sequence#(aes256_seq_item);
 
     virtual task body();
         aes256_seq_item item;
-        bit [255:0] master_key_sweep = 'h0;
-        bit [127:0] data_in_sweep = 'h0;
+        bit [`MATRIX_KEY_WIDTH-1:0] master_key_sweep = 'h0;
+        bit [`MATRIX_DATA_WIDTH-1:0] data_in_sweep = 'h0;
         int unsigned key_cnt = 0;
         int unsigned pt_cnt = 0;
         

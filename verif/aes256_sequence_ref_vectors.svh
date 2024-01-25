@@ -6,9 +6,9 @@ class aes256_sequence_ref_vectors extends uvm_sequence#(aes256_seq_item);
     byte unsigned wait_period_at_the_end = LOADING_CYCLES + 2;
     integer fd_vector;
     string line;
-    bit [255:0] ref_master_key;
-    bit [127:0] ref_data_in;
-    bit [127:0] ref_data_out;
+    bit [`MATRIX_KEY_WIDTH-1:0] ref_master_key;
+    bit [`MATRIX_DATA_WIDTH-1:0] ref_data_in;
+    bit [`MATRIX_DATA_WIDTH-1:0] ref_data_out;
 
     function new (string name = "aes256_sequence_ref_vectors");
         super.new(name);
@@ -16,7 +16,7 @@ class aes256_sequence_ref_vectors extends uvm_sequence#(aes256_seq_item);
 
     virtual task body();
         aes256_seq_item item;
-        bit [255:0] prev_master_key;
+        bit [`MATRIX_KEY_WIDTH-1:0] prev_master_key;
         bool_t first_key_expanded = FALSE;
         bit rnd_status = 'b0;
         int unsigned key_cnt = 0;

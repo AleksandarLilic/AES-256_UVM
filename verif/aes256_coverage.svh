@@ -1,5 +1,5 @@
 
-covergroup cg_256bit_data(ref logic [255:0] data, ref logic en) @(posedge DUT_aes256_if_i.clk);
+covergroup cg_256bit_data(ref logic [`MATRIX_KEY_WIDTH-1:0] data, ref logic en) @(posedge DUT_aes256_if_i.clk);
     type_option.goal = 100;
     type_option.weight = 1;
     option.per_instance = 1;
@@ -10,7 +10,7 @@ covergroup cg_256bit_data(ref logic [255:0] data, ref logic en) @(posedge DUT_ae
     data_min_max_cp: coverpoint data iff (en) { bins min = {'h0}; bins max = {CP_256_MAX}; }
 endgroup
 
-covergroup cg_128bit_data(ref logic [127:0] data, ref logic en) @(posedge DUT_aes256_if_i.clk);
+covergroup cg_128bit_data(ref logic [`MATRIX_DATA_WIDTH-1:0] data, ref logic en) @(posedge DUT_aes256_if_i.clk);
     type_option.goal = 100;
     type_option.weight = 1;
     option.per_instance = 1;

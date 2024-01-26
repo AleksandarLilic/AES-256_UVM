@@ -132,7 +132,11 @@ aes256_loading aes256_loading_i(
 
 endmodule: aes256_loading_wrap
 
+`include "uvm_macros.svh"
 interface aes256_if;
+    import uvm_pkg::*;
+
+    // signals
     logic clk;
     logic rst;
     logic key_expand_start;
@@ -146,4 +150,48 @@ interface aes256_if;
     `ifdef HIER_ACCESS
     logic [0:`N_ROUNDS-1] [`MATRIX_ROUND_KEY_WIDTH-1:0] key_exp_round_keys;
     `endif
+
+    // DUT Asertions
+    // ensure 'key_ready' does not go high one or more cycles after 'key_expand_start' is high
+    // one cycle is to account for DUT's response on the new key_expansion request after previous key_expansion was completed
+    property p_not_key_ready_during_key_expand_start;
+        @(posedge clk) disable iff (rst) 
+            key_expand_start |-> ##[1:$] !key_ready;
+    endproperty
+    assert_not_key_ready_during_key_expand_start: assert property (p_not_key_ready_during_key_expand_start)
+        else `uvm_fatal("aes256_if", "DUT Invalid behavior: key_ready went high while key_expand_start is high.");
+
+    // when 'key_expand_start' goes high while 'key_ready' is high, 'key_ready' should go low in the next cycle
+    property p_not_key_ready_after_new_key_expand_start;
+        @(posedge clk) disable iff (rst)
+            (key_ready && key_expand_start) |-> ##1 !key_ready;
+    endproperty
+    assert_not_key_ready_after_new_key_expand_start: assert property (p_not_key_ready_after_new_key_expand_start)
+        else `uvm_fatal("aes256_if", "DUT Invalid behavior: key_ready did not go low after key_expand_start went high.");
+
+    // ensure 'enc_done' does not go high one or more cycles after 'next_val_req' is high
+    property p_not_enc_done_during_next_val_req;
+        @(posedge clk) disable iff (rst)
+            next_val_req |-> ##[1:$] !enc_done;
+    endproperty
+    assert_not_enc_done_during_next_val_req: assert property (p_not_enc_done_during_next_val_req)
+        else `uvm_fatal("aes256_if", "DUT Invalid behavior: enc_done went high while next_val_req is high.");
+    
+    // TB Assertions
+    // ensure 'next_val_req' does not go high while 'key_expand_start' is high
+    property p_not_next_val_req_during_key_expand_start;
+        @(posedge clk) disable iff (rst)
+            key_expand_start |-> !next_val_req throughout key_expand_start;
+    endproperty
+    assert_not_next_val_req_during_key_expand_start: assert property (p_not_next_val_req_during_key_expand_start)
+        else `uvm_fatal("aes256_if", "TB Invalid behavior: next_val_req went high while key_expand_start is high.");
+
+    // ensure 'next_val_req' does not go high while 'key_ready' is low
+    property p_not_next_val_req_when_not_key_not_ready;
+        @(posedge clk) disable iff (rst)
+            !key_ready |-> !next_val_req throughout !key_ready;
+    endproperty
+    assert_not_next_val_req_when_not_key_not_ready: assert property (p_not_next_val_req_when_not_key_not_ready)
+        else `uvm_fatal("aes256_if", "TB Invalid behavior: next_val_req went high while key_ready is low.");
+
 endinterface: aes256_if

@@ -139,14 +139,6 @@ class aes256_monitor extends uvm_monitor;
             disable fork_encryption;
         end: timing_check_enc
 
-        forever begin: protocol_checks
-            if (DUT_vif.next_val_req == 1 && DUT_vif.key_expand_start == 1) 
-                `uvm_fatal({get_type_name(), ":protocol_checks"}, "New ciphertext and new expansion requested at the same time. Invalid request. Simulation aborted");
-            if (DUT_vif.next_val_req == 1 && DUT_vif.key_ready == 0) 
-                `uvm_fatal({get_type_name(), ":key_expansion"}, "New ciphertext requested but the key has not been expanded yet. Invalid request. Simulation aborted");
-            @(posedge DUT_vif.clk); #1;
-        end: protocol_checks
-
         forever begin: loading
             loading_interrupted = 1'b0;
             @(posedge DUT_vif.enc_done);

@@ -17,6 +17,10 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
 
     task run_phase(uvm_phase phase);
         aes256_seq_item item;
+        DUT_vif.master_key = 'h0;
+        DUT_vif.key_expand_start = 'h0;
+        DUT_vif.data_in = 'h0;
+        DUT_vif.next_val_req = 'h0;
         DUT_vif.rst = 1'b1;
         @(posedge DUT_vif.clk);
         #1;

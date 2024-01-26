@@ -39,18 +39,24 @@ def run_test(test_name, run_dir, build_dir, ref_vectors_test=None, sv_seed=11):
     if ref_vectors_test in test_name:
         # running ref vector test
         ref_vectors = test_name.replace(ref_vectors_test + "_", "")
-        subprocess.run(["make", "sim_vec", f"UVM_TESTNAME={ref_vectors_test}", f"REF_VECTORS={ref_vectors}.csv"], cwd=test_dir)        
+        make_status = subprocess.run(["make", "sim_vec", f"UVM_TESTNAME={ref_vectors_test}", f"REF_VECTORS={ref_vectors}.csv"], cwd=test_dir)        
     else:
         # running internal test
-        subprocess.run(["make", "sim", f"UVM_TESTNAME={test_name}", f"SEED={sv_seed}"], cwd=test_dir)
+        make_status = subprocess.run(["make", "sim", f"UVM_TESTNAME={test_name}", f"SEED={sv_seed}"], cwd=test_dir)
+    
+    check_make_status(make_status, f"run test {test_name}")
     # write to test.status
     status_file_path = os.path.join(test_dir, "test.status")
     with open(status_file_path, 'w') as status_file:
-        status = check_status(os.path.join(test_dir, "test.log"), test_name)
+        status = check_test_status(os.path.join(test_dir, "test.log"), test_name)
         status_file.write(status)
         print(status)
 
-def check_status(test_log_path, test_name):
+def check_make_status(make_status, msg: str):
+    if make_status.returncode != 0:
+        raise RuntimeError(f"Error: Makefile failed to {msg}.")
+
+def check_test_status(test_log_path, test_name):
     if os.path.exists(test_log_path):
         with open(test_log_path, 'r') as file:
             for line in file:
@@ -134,7 +140,8 @@ def main():
         linked_makefile_path = os.path.join(build_dir, "Makefile")
         os.symlink(makefile_path, linked_makefile_path)
 
-        subprocess.run(["make", "elab"], cwd=build_dir)
+        make_status = subprocess.run(["make", "elab"], cwd=build_dir)
+        check_make_status(make_status, "build")
 
     # check if the specified number of jobs exceeds the number of CPU cores
     if args.jobs < 1:
@@ -188,14 +195,17 @@ def main():
         if not os.path.exists(linked_makefile_path):
             os.symlink(makefile_path, linked_makefile_path)
         else:
-            subprocess.run(["make", "cleancov"], cwd=run_dir)
-
+            make_status = subprocess.run(["make", "cleancov"], cwd=run_dir)
+            check_make_status(make_status, "clean coverage databases")
+        
         # create cc_dirs arguments string
         cc_dirs = ' '.join([f"-cc_dir 'test_{test_name}'" for test_name in all_tests])
         fc_dirs = ' '.join([f"-dir 'test_{test_name}/xsim.covdb'" for test_name in all_tests])
 
-        subprocess.run(["make", "code_cov_merge", f"CODE_COV_DB_ALL={cc_dirs}"], cwd=run_dir)
-        subprocess.run(["make", "func_cov_merge", f"FUNC_COV_DB_ALL={fc_dirs}"], cwd=run_dir)
+        make_status = subprocess.run(["make", "code_cov_merge", f"CODE_COV_DB_ALL={cc_dirs}"], cwd=run_dir)
+        check_make_status(make_status, "merge code coverage databases")
+        make_status = subprocess.run(["make", "func_cov_merge", f"FUNC_COV_DB_ALL={fc_dirs}"], cwd=run_dir)
+        check_make_status(make_status, "merge functional coverage databases")
 
         print("\nCoverage analysis DONE.\n")
     

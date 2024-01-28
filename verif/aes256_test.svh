@@ -1,6 +1,7 @@
 import uvm_pkg::*;
 `include "aes256_cfg.svh"
 `include "aes256_env.svh"
+`include "aes256_subscriber.svh"
 
 class aes256_test_base extends uvm_test;
     `uvm_component_utils(aes256_test_base)
@@ -284,9 +285,20 @@ class aes256_test_ref_vectors extends aes256_test_base;
     integer fd_scbd;
     string line;
     string ref_vectors_path;
+    aes256_subscriber sub;
 
     function new (string name = "aes256_test_ref_vectors", uvm_component parent = null);
         super.new(name, parent);
+    endfunction
+
+    function void build_phase(uvm_phase phase);
+        super.build_phase(phase);
+        sub = aes256_subscriber::type_id::create("sub", this);
+    endfunction
+
+    function void connect_phase(uvm_phase phase);
+        super.connect_phase(phase);
+        env.agent_1.monitor_1.item_ap.connect(sub.item_imp);
     endfunction
 
     task run_phase(uvm_phase phase);
@@ -308,6 +320,12 @@ class aes256_test_ref_vectors extends aes256_test_base;
         void'($fgets(line, fd_scbd)); // skip header line
         
         seq = aes256_sequence_ref_vectors::type_id::create("seq");
+        if ($test$plusargs("MCT_VECTORS")) begin
+            if ($test$plusargs("ALLOW_VECTOR_CHECKER_NONE")) begin
+                `uvm_fatal(get_type_name(), "MCT_VECTORS and ALLOW_VECTOR_CHECKER_NONE cannot be used together");
+            end
+            seq.sub = sub;
+        end
         seq.fd_vector = fd_seq;
         env.scbd.use_ref_vectors = TRUE;
         env.scbd.fd_vector = fd_scbd;

@@ -1,8 +1,10 @@
 import uvm_pkg::*;
 `include "aes256_inc.svh"
+`include "aes256_subscriber.svh"
 
 class aes256_sequence_ref_vectors extends uvm_sequence#(aes256_seq_item);
     `uvm_object_utils(aes256_sequence_ref_vectors)
+    aes256_subscriber sub;
     byte unsigned wait_period_at_the_end = LOADING_CYCLES + 2;
     integer fd_vector;
     string line;
@@ -21,6 +23,7 @@ class aes256_sequence_ref_vectors extends uvm_sequence#(aes256_seq_item);
         bit rnd_status = 'b0;
         int unsigned key_cnt = 0;
         int unsigned pt_cnt = 0;
+        int unsigned mct_pt_cnt = 0;
 
         while (!$feof(fd_vector)) begin
             void'($fgets(line, fd_vector));
@@ -51,6 +54,19 @@ class aes256_sequence_ref_vectors extends uvm_sequence#(aes256_seq_item);
             item.data_in = ref_data_in;
             `SEND_ITEM(item, 0);
             pt_cnt++;
+            if ($test$plusargs("MCT_VECTORS")) begin
+                `uvm_info(get_type_name(), $sformatf(" ===> Plaintext MCT vector iteration %0d <===", pt_cnt), UVM_LOW)
+                repeat(999) begin // MCT runs 1000 times for each plaintext in the vector file
+                    `uvm_info(get_type_name(), $sformatf(" ===> New Plaintext MCT vectors. Count: %0d <===", mct_pt_cnt), UVM_MEDIUM)
+                    // get CT from subscriber
+                    sub.item_received.wait_trigger();
+                    item.data_in = sub.item.data_out;
+                    //item.next_val_req_delay = LOADING_CYCLES + 1;
+                    // send it back to DUT as PT
+                    `SEND_ITEM(item, 0);
+                    mct_pt_cnt++;
+                end
+            end
         end
         
         item.key_expand_start = 0;

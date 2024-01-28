@@ -25,6 +25,9 @@ class aes256_scoreboard extends uvm_scoreboard;
     bit [`MATRIX_DATA_WIDTH-1:0] ref_data_in;
     bit [`MATRIX_DATA_WIDTH-1:0] ref_data_out;
     string ref_data_out_str;
+    int unsigned mct_pt_cnt = 0;
+    bit [`MATRIX_KEY_WIDTH-1:0] DUT_master_key;
+    bit [`MATRIX_DATA_WIDTH-1:0] DUT_data_in;
 
     function new(string name = "aes256_scoreboard", uvm_component parent = null);
         super.new(name, parent);
@@ -69,37 +72,54 @@ class aes256_scoreboard extends uvm_scoreboard;
         end
 
         if (use_ref_vectors == TRUE) begin
-            if (!$feof(fd_vector)) begin
-                void'($fgets(line, fd_vector));
+            if ($test$plusargs("MCT_VECTORS")) mct_pt_cnt++;
+            if ($test$plusargs("MCT_VECTORS") && mct_pt_cnt == 1) begin
+                // store key and PT that started MCT
+                DUT_master_key = item.master_key;
+                DUT_data_in = item.data_in;
+            end
+            
+            // compare last output of MCT or all outputs of non-MCT
+            if (($test$plusargs("MCT_VECTORS") && mct_pt_cnt == 1000) || (!$test$plusargs("MCT_VECTORS"))) begin
+                if (!$feof(fd_vector)) begin
+                    void'($fgets(line, fd_vector));
+                    // can't convert str to 128-bit value with str.atohex() as it returns 32-bit value
+                    $sscanf(line, "%h,%h,%s", ref_master_key, ref_data_in, ref_data_out_str);
+                    $sscanf(line, "%h,%h,%h", ref_master_key, ref_data_in, ref_data_out);
 
-                // can't convert str to 128-bit value with str.atohex() as this returns 32-bit value
-                $sscanf(line, "%h,%h,%s", ref_master_key, ref_data_in, ref_data_out_str);
-                $sscanf(line, "%h,%h,%h", ref_master_key, ref_data_in, ref_data_out);
-                
-                assert (ref_master_key == item.master_key) else begin
-                    `PRINT_SCBD_ERROR($sformatf("Vector checker input FAILED. Master key mismatch: expected 'h%0h, received 'h%0h", ref_master_key, item.master_key))
-                    error_count += 1;
-                end
-
-                assert (ref_data_in == item.data_in) else begin
-                    `PRINT_SCBD_ERROR($sformatf("Vector checker input FAILED. Plaintext mismatch: expected 'h%0h, received 'h%0h", ref_data_in, item.data_in))
-                    error_count += 1;
-                end
-
-                if ($test$plusargs("ALLOW_VECTOR_CHECKER_NONE") && ref_data_out_str == "NONE") begin
-                    `uvm_info(get_type_name(), "Vector checker output: no output expected", UVM_HIGH)
-                end else if (ref_data_out_str == "NONE") begin
-                    `uvm_error(get_type_name(), "Vector checker output: NONE specified for ciphertext but +ALLOW_VECTOR_CHECKER_NONE not specified. Can't compare outputs")
-                    error_count += 1;
-                end else begin
-                    assert (ref_data_out == item.data_out) else begin
-                        `PRINT_SCBD_ERROR($sformatf("Vector checker output FAILED. Ciphertext mismatch: expected 'h%0h, received 'h%0h", ref_data_out, item.data_out))
+                    if (!$test$plusargs("MCT_VECTORS")) begin
+                        DUT_master_key = item.master_key;
+                        DUT_data_in = item.data_in;
+                    end
+                    
+                    assert (ref_master_key == DUT_master_key) else begin
+                        `PRINT_SCBD_ERROR($sformatf("Vector checker input FAILED. Master key mismatch: expected 'h%0h, received 'h%0h", ref_master_key, item.master_key))
                         error_count += 1;
                     end
+
+                    assert (ref_data_in == DUT_data_in) else begin
+                        `PRINT_SCBD_ERROR($sformatf("Vector checker input FAILED. Plaintext mismatch: expected 'h%0h, received 'h%0h", ref_data_in, item.data_in))
+                        error_count += 1;
+                    end
+
+                    if ($test$plusargs("ALLOW_VECTOR_CHECKER_NONE") && ref_data_out_str == "NONE") begin
+                        `uvm_info(get_type_name(), "Vector checker output: no output expected", UVM_HIGH)
+                    end else if (ref_data_out_str == "NONE") begin
+                        `uvm_error(get_type_name(), "Vector checker output: NONE specified for ciphertext but +ALLOW_VECTOR_CHECKER_NONE not specified. Can't compare outputs")
+                        error_count += 1;
+                    end else begin
+                        assert (ref_data_out == item.data_out) else begin
+                            `PRINT_SCBD_ERROR($sformatf("Vector checker output FAILED. Ciphertext mismatch: expected 'h%0h, received 'h%0h", ref_data_out, item.data_out))
+                            error_count += 1;
+                        end
+                    end
+
+                    if ($test$plusargs("MCT_VECTORS")) mct_pt_cnt = 0;
+
+                end else begin
+                    `uvm_error(get_type_name(), "Vector checker FAILED. End of reference vectors file reached but more items expected")
+                    error_count += 1;
                 end
-            end else begin
-                `uvm_error(get_type_name(), "Vector checker FAILED. End of reference vectors file reached but more items expected")
-                error_count += 1;
             end
         end
 

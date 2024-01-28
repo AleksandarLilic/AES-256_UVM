@@ -27,6 +27,7 @@ class aes256_driver extends uvm_driver #(aes256_seq_item);
         DUT_vif.rst = 1'b0;
         forever begin
             seq_item_port.get_next_item(item);
+            `uvm_info(get_type_name(), $sformatf("Got item\n%s", item.sprint()), UVM_HIGH)
             if (item.key_expand_start == 1) begin
                 if (DUT_vif.next_val_ready == 1 || DUT_vif.enc_done == 1) begin
                     // if loading is in progress or about to start

@@ -31,7 +31,10 @@ def validate_list(specified_list, valid_list):
         raise ValueError(f"Invalid elements specified: {', '.join(invalid_list_elements)}")
     return specified_list
 
-def run_test(test_name, run_dir, build_dir, ref_vectors_test=None, sv_seed=11):
+def get_ref_vectors_list(vec):
+    return [v for v in vec['vectors'].keys()]
+
+def run_test(test_name, run_dir, build_dir, ref_vectors_test=None, ref_vectors_dict={}, sv_seed=11):
     test_dir = os.path.join(run_dir, f"test_{test_name}")
     if os.path.exists(test_dir):
         shutil.rmtree(test_dir)
@@ -39,11 +42,20 @@ def run_test(test_name, run_dir, build_dir, ref_vectors_test=None, sv_seed=11):
     if ref_vectors_test in test_name:
         # running ref vector test
         ref_vectors = test_name.replace(ref_vectors_test + "_", "")
-        make_status = subprocess.run(["make", "sim_vec", f"UVM_TESTNAME={ref_vectors_test}", f"REF_VECTORS={ref_vectors}.csv"], cwd=test_dir)        
+        user_settings = f"USER_SETTINGS={ref_vectors_dict[ref_vectors]}"
+        make_status = subprocess.run(["make", "sim_vec", 
+                                      f"UVM_TESTNAME={ref_vectors_test}",
+                                      f"REF_VECTORS={ref_vectors}.csv",
+                                      f"{user_settings}"], 
+                                      cwd=test_dir)        
     else:
-        # running internal test
-        make_status = subprocess.run(["make", "sim", f"UVM_TESTNAME={test_name}", f"SEED={sv_seed}"], cwd=test_dir)
+        # running regular test
+        make_status = subprocess.run(["make", "sim",
+                                      f"UVM_TESTNAME={test_name}",
+                                      f"SEED={sv_seed}"],
+                                      cwd=test_dir)
     
+    print(f"Test {test_name} DONE.")
     check_make_status(make_status, f"run test {test_name}")
     # write to test.status
     status_file_path = os.path.join(test_dir, "test.status")
@@ -99,13 +111,16 @@ def main():
     valid_ref_vectors = read_from_json(internal_ref_vectors_config_path)
     
     ref_vectors_test = valid_ref_vectors["test_name"]
+    use_ref_vectors_settings = False
+    ref_vectors_config = {} 
     if args.ref_vectors_list:
-        ref_vectors_config_path = args.ref_vectors_list
-        all_ref_vectors = validate_list(read_from_json(ref_vectors_config_path)['vectors'], valid_ref_vectors["vectors"])
+        ref_vectors_config = read_from_json(args.ref_vectors_list)
+        all_ref_vectors = validate_list(get_ref_vectors_list(ref_vectors_config), get_ref_vectors_list(valid_ref_vectors))
         all_vector_tests = [ref_vectors_test + "_" + ref_vector for ref_vector in all_ref_vectors]
         all_tests = all_tests + all_vector_tests
+        use_ref_vectors_settings = True
     elif args.ref_vectors:
-        all_ref_vectors = validate_list([args.ref_vectors], valid_ref_vectors["vectors"])
+        all_ref_vectors = validate_list([args.ref_vectors], get_ref_vectors_list(valid_ref_vectors))
         all_vector_tests = [ref_vectors_test + "_" + ref_vector for ref_vector in all_ref_vectors]
         all_tests = all_vector_tests
     elif not (args.testlist or args.test):
@@ -156,7 +171,8 @@ def main():
     with multiprocessing.Pool(min(args.jobs,MAX_WORKERS)) as pool:
         # create a partial function with all fixed arguments except test_name
         partial_run_test = functools.partial(run_test, run_dir=run_dir, build_dir=build_dir,
-                                             ref_vectors_test=ref_vectors_test, sv_seed=sv_seed)
+                                             ref_vectors_test=ref_vectors_test, sv_seed=sv_seed,
+                                             ref_vectors_dict=ref_vectors_config['vectors'])
         pool.map(partial_run_test, all_tests)
     
     # check test suite results

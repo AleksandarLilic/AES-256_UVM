@@ -4,9 +4,9 @@
         "vectors_base",
         "vectors_edge_cases",
         "vectors_NIST_examples256",
-        "vectors_NIST_GFSbox256",
-        "vectors_NIST_KeySbox256",
-        "vectors_NIST_VarKey256",
-        "vectors_NIST_VarTxt256"
+        "vectors_NIST_ECBGFSbox256",
+        "vectors_NIST_ECBKeySbox256",
+        "vectors_NIST_ECBVarKey256",
+        "vectors_NIST_ECBVarTxt256"
     ]
 }

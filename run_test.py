@@ -113,7 +113,7 @@ def main():
     else:
         ref_vectors_test = None
 
-    print("\nRunning tests:")
+    print(f"\nRunning {len(all_tests)} tests:")
     for t in all_tests:
         print("   ",t)
     print()

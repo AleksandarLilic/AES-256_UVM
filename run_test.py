@@ -8,6 +8,8 @@ import functools
 import json
 import random
 
+RUN_CFG = "run_cfg.tcl"
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Run RTL simulation.')
     parser.add_argument('-t', '--test', action='append', help='Specify the tests to run')
@@ -16,10 +18,24 @@ def parse_args():
     parser.add_argument('--keep-build', action='store_true', help='Reuse existing build directory if available')
     parser.add_argument('-j', '--jobs', type=int, default=MAX_WORKERS, help='Number of parallel jobs to run (default: number of CPU cores)')
     parser.add_argument('--coverage', action='store_true', help='Enable coverage analysis')
+    parser.add_argument('--coverage-only', action='store_true', help='Only run coverage analysis. Relies on the existing test directories for the specified tests')
     parser.add_argument('--seed', type=int, help='Seed value for the tests')
     parser.add_argument('-v', '--ref-vectors', help='Specify name of the reference vector to run')
     parser.add_argument('--ref-vectors-list', help='Path to a JSON file containing test name and a list of reference vectors')
+    parser.add_argument('--log_wave', action='store_true', help='Include log wave command in TCL script')
     return parser.parse_args()
+
+def create_run_cfg(add_log_wave):
+    tcl_content = []
+    if add_log_wave:
+        tcl_content.append("log_wave -recursive *")
+    tcl_content.extend([
+        "run all",
+        "exit"
+    ])
+
+    with open(RUN_CFG, 'w') as file:
+        file.writelines(line + '\n' for line in tcl_content)
 
 def read_from_json(file_path):
     with open(file_path, 'r') as file:
@@ -91,6 +107,11 @@ def main():
         raise ValueError("Cannot use both -t|--test and -v|--ref-vectors. Vector test is specified in the JOSN config file.")
     if args.testlist and args.ref_vectors:
         raise ValueError("Cannot use both --testlist and -v|--ref-vectors. Single reference vector cannot be used with a test list. Specify one test in the JSON ref_vectors config file if needed.")
+    if args.coverage_only and args.coverage:
+        raise ValueError("Cannot use both --coverage-only and --coverage. Choose one.")
+    
+    # create run_cfg.tcl
+    create_run_cfg(args.log_wave)
     
     # load internal test list
     internal_testlist_path = os.path.join(os.path.dirname(__file__), "testlist.json")
@@ -111,14 +132,12 @@ def main():
     valid_ref_vectors = read_from_json(internal_ref_vectors_config_path)
     
     ref_vectors_test = valid_ref_vectors["test_name"]
-    use_ref_vectors_settings = False
     ref_vectors_config = {} 
     if args.ref_vectors_list:
         ref_vectors_config = read_from_json(args.ref_vectors_list)
         all_ref_vectors = validate_list(get_ref_vectors_list(ref_vectors_config), get_ref_vectors_list(valid_ref_vectors))
         all_vector_tests = [ref_vectors_test + "_" + ref_vector for ref_vector in all_ref_vectors]
         all_tests = all_tests + all_vector_tests
-        use_ref_vectors_settings = True
     elif args.ref_vectors:
         all_ref_vectors = validate_list([args.ref_vectors], get_ref_vectors_list(valid_ref_vectors))
         all_vector_tests = [ref_vectors_test + "_" + ref_vector for ref_vector in all_ref_vectors]
@@ -163,17 +182,18 @@ def main():
         raise ValueError("Error: The number of parallel jobs must be at least 1.")
     if args.jobs > MAX_WORKERS:
         print(f"Warning: The specified number of jobs ({args.jobs}) exceeds the number of available CPU cores ({MAX_WORKERS}).")
-    print(f"Running simulation with {MAX_WORKERS} parallel jobs.")
+    print(f"Running simulation with {min(args.jobs,MAX_WORKERS)} parallel jobs.")
     
-    # run tests in parallel
-    random.seed(5)
-    sv_seed = args.seed if args.seed is not None else random.randint(0, 2**32 - 1)
-    with multiprocessing.Pool(min(args.jobs,MAX_WORKERS)) as pool:
-        # create a partial function with all fixed arguments except test_name
-        partial_run_test = functools.partial(run_test, run_dir=run_dir, build_dir=build_dir,
-                                             ref_vectors_test=ref_vectors_test, sv_seed=sv_seed,
-                                             ref_vectors_dict=ref_vectors_config['vectors'])
-        pool.map(partial_run_test, all_tests)
+    if not args.coverage_only:
+        # run tests in parallel
+        random.seed(5)
+        sv_seed = args.seed if args.seed is not None else random.randint(0, 2**32 - 1)
+        with multiprocessing.Pool(min(args.jobs,MAX_WORKERS)) as pool:
+            # create a partial function with all fixed arguments except test_name
+            partial_run_test = functools.partial(run_test, run_dir=run_dir, build_dir=build_dir,
+                                                ref_vectors_test=ref_vectors_test, sv_seed=sv_seed,
+                                                ref_vectors_dict=ref_vectors_config['vectors'])
+            pool.map(partial_run_test, all_tests)
     
     # check test suite results
     all_tests_passed = True
@@ -202,7 +222,7 @@ def main():
         print("\nTest suite FAILED.\n")
 
     # coverage analysis
-    if args.coverage:
+    if args.coverage or args.coverage_only:
         if not all_tests_passed:
             raise RuntimeError("Cannot perform coverage analysis when test suite failed.")
         # link Makefile in the rundir

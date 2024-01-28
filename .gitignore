@@ -33,3 +33,6 @@ xcrg_*_cov_report
 # run dirs
 aes_test*/
 aestest*/
+
+# run scripts
+./run_cfg.tcl

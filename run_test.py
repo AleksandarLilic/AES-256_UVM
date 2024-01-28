@@ -50,12 +50,12 @@ def validate_list(specified_list, valid_list):
 def get_ref_vectors_list(vec):
     return [v for v in vec['vectors'].keys()]
 
-def run_test(test_name, run_dir, build_dir, ref_vectors_test=None, ref_vectors_dict={}, sv_seed=11):
+def run_test(test_name, run_dir, build_dir, ref_vectors_test, ref_vectors_dict={}, sv_seed=11):
     test_dir = os.path.join(run_dir, f"test_{test_name}")
     if os.path.exists(test_dir):
         shutil.rmtree(test_dir)
     shutil.copytree(build_dir, test_dir, symlinks=True)
-    if ref_vectors_test in test_name:
+    if ref_vectors_test != None and ref_vectors_test in test_name:
         # running ref vector test
         ref_vectors = test_name.replace(ref_vectors_test + "_", "")
         user_settings = f"USER_SETTINGS={ref_vectors_dict[ref_vectors]}"
@@ -192,7 +192,7 @@ def main():
             # create a partial function with all fixed arguments except test_name
             partial_run_test = functools.partial(run_test, run_dir=run_dir, build_dir=build_dir,
                                                 ref_vectors_test=ref_vectors_test, sv_seed=sv_seed,
-                                                ref_vectors_dict=ref_vectors_config['vectors'])
+                                                ref_vectors_dict=ref_vectors_config.get('vectors', None))
             pool.map(partial_run_test, all_tests)
     
     # check test suite results

@@ -16,7 +16,7 @@ REF_VECTORS := vectors_base.csv
 
 USER_SETTINGS :=
 
-TCLBATCH := $(REPO_ROOT)/run_cfg.tcl
+TCLBATCH := run_cfg.tcl
 UVM_VERBOSITY := UVM_LOW
 UVM_TESTNAME := aes256_test_smoke
 SEED := 10
@@ -52,7 +52,7 @@ elab: .elab.touchfile
 
 sim: .elab.touchfile
 	@echo "Running simulation"
-	xsim $(TOP) -tclbatch $(TCLBATCH) -testplusarg UVM_VERBOSITY=$(UVM_VERBOSITY) -testplusarg UVM_TESTNAME=$(UVM_TESTNAME) -sv_seed $(SEED) -stats -onerror quit -testplusarg EXIT_ON_ERROR -testplusarg $(FUNC_COV) $(SIM_PLUSARGS) $(USER_SETTINGS) -log test.log > /dev/null 2>&1
+	xsim $(TOP) -tclbatch $(REPO_ROOT)/$(TCLBATCH) -testplusarg UVM_VERBOSITY=$(UVM_VERBOSITY) -testplusarg UVM_TESTNAME=$(UVM_TESTNAME) -sv_seed $(SEED) -stats -onerror quit -testplusarg EXIT_ON_ERROR -testplusarg $(FUNC_COV) $(SIM_PLUSARGS) $(USER_SETTINGS) -log test.log > /dev/null 2>&1
 	@touch .sim.touchfile
 	@echo "Simulation done"
 	@grep "PASS\|FAIL" test.log

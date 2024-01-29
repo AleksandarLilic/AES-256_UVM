@@ -8,7 +8,7 @@ import functools
 import json
 import random
 
-RUN_CFG = "run_cfg.tcl"
+RUN_CFG = "run_cfg_suite.tcl"
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run RTL simulation.')
@@ -62,12 +62,14 @@ def run_test(test_name, run_dir, build_dir, ref_vectors_test, ref_vectors_dict={
         make_status = subprocess.run(["make", "sim_vec", 
                                       f"UVM_TESTNAME={ref_vectors_test}",
                                       f"REF_VECTORS={ref_vectors}.csv",
+                                      f"TCLBATCH={RUN_CFG}",
                                       f"{user_settings}"], 
                                       cwd=test_dir)        
     else:
         # running regular test
         make_status = subprocess.run(["make", "sim",
                                       f"UVM_TESTNAME={test_name}",
+                                      f"TCLBATCH={RUN_CFG}",
                                       f"SEED={sv_seed}"],
                                       cwd=test_dir)
     

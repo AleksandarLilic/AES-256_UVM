@@ -35,4 +35,4 @@ aes_test*/
 aestest*/
 
 # run scripts
-run_cfg.tcl
+run_cfg*.tcl

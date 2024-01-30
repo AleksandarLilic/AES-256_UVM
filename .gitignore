@@ -29,6 +29,7 @@ xcrg_*_cov_report
 
 # VSCode files
 .vscode/
+.vscode-ctags
 
 # run dirs
 aes_test*/

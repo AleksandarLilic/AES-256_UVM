@@ -11,6 +11,8 @@ class aes256_scoreboard extends uvm_scoreboard;
     uvm_analysis_imp#(aes256_seq_item, aes256_scoreboard) item_imp;
     
     int unsigned num_items = 0;
+    int unsigned num_expected_items = 0;
+    bool_t ref_vector_length_mismatch = FALSE;
     byte unsigned key_bytes[32];
     byte unsigned plaintext_bytes[16];
     byte unsigned round_keys_bytes[240];
@@ -118,6 +120,7 @@ class aes256_scoreboard extends uvm_scoreboard;
 
                 end else begin
                     `uvm_error(get_type_name(), "Vector checker FAILED. End of reference vectors file reached but more items expected")
+                    ref_vector_length_mismatch = TRUE;
                     error_count += 1;
                 end
             end
@@ -132,13 +135,25 @@ class aes256_scoreboard extends uvm_scoreboard;
     endfunction
 
     function void report_phase(uvm_phase phase);
+        bool_t no_erros = bool_t'(error_count == 0);
+        bool_t items_cnt_match;
         `uvm_info(get_type_name(), $sformatf("Number of items received: %0d", num_items), UVM_NONE)
-        if (num_items == 0) begin
-            `uvm_warning(get_type_name(), "No items received. Check the test and sequence")
-        end else if (error_count == 0) begin
+        if (!use_ref_vectors) begin
+            items_cnt_match = bool_t'(num_items == num_expected_items);
+            `uvm_info(get_type_name(), $sformatf("Number of expected items: %0d", num_expected_items), UVM_NONE)
+        end else begin
+            items_cnt_match = bool_t'(ref_vector_length_mismatch == FALSE);
+        end
+        
+        if (no_erros && items_cnt_match) begin
             `uvm_info(get_type_name(), "\n\n==== PASS ====\n\n", UVM_NONE)
         end else begin
-            `uvm_info(get_type_name(), $sformatf("Total number of errors: %0d", error_count), UVM_NONE)
+            if (!items_cnt_match) begin
+                if (use_ref_vectors) `uvm_error(get_type_name(), "Number of items received does not match number of expected items from the reference vectors file")
+                else `uvm_error(get_type_name(), $sformatf("Number of items received (%0d) does not match number of expected items (%0d)", num_items, num_expected_items))
+            end else begin
+                `uvm_error(get_type_name(), $sformatf("Total number of errors: %0d", error_count))
+            end
             `uvm_fatal(get_type_name(), "\n\n==== FAIL ====\n\n")
         end
     endfunction

@@ -176,6 +176,14 @@ interface aes256_if;
     endproperty
     assert_not_enc_done_during_next_val_req: assert property (p_not_enc_done_during_next_val_req)
         else `uvm_fatal("aes256_if", "DUT Invalid behavior: enc_done went high while next_val_req is high.");
+
+    // next_val_ready should go low when key_expand_start goes high
+    property p_not_next_val_ready_during_key_expand_start;
+        @(posedge clk) disable iff (rst)
+            key_expand_start |-> ##1 !next_val_ready;
+    endproperty
+    assert_not_next_val_ready_during_key_expand_start: assert property (p_not_next_val_ready_during_key_expand_start)
+        else `uvm_fatal("aes256_if", "DUT Invalid behavior: next_val_ready did not go low after key_expand_start went high.");
     
     // TB Assertions
     // ensure 'next_val_req' does not go high while 'key_expand_start' is high

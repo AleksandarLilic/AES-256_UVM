@@ -282,7 +282,7 @@ class aes256_test_sweep_key extends aes256_test_base;
         
         seq = aes256_sequence_sweep::type_id::create("seq");
         seq.sweep_type = SWEEP_TYPE_KEY;
-        env.scbd.num_expected_items += 512-1 ; // 512 keys in the key sweep, 256-bit key * 2, 'h0 not repeated
+        env.scbd.num_expected_items += 512; // 512 keys in the key sweep, 256-bit key * 2
         seq.start(env.agent_1.sequencer_1);
 
         phase.drop_objection(this);
@@ -303,7 +303,7 @@ class aes256_test_sweep_pt extends aes256_test_base;
         
         seq = aes256_sequence_sweep::type_id::create("seq");
         seq.sweep_type = SWEEP_TYPE_PT;
-        env.scbd.num_expected_items += 256-1; // 256 plaintexts in the plaintext sweep, 128-bit plaintext * 2, 'h0 not repeated
+        env.scbd.num_expected_items += 256; // 256 plaintexts in the plaintext sweep, 128-bit plaintext * 2
         seq.start(env.agent_1.sequencer_1);
 
         phase.drop_objection(this);

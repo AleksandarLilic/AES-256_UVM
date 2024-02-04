@@ -76,9 +76,9 @@ class aes256_monitor extends uvm_monitor;
             disable expansion_progress;
             
             while (exp_started == 0) begin
-                @(posedge DUT_vif.clk or negedge DUT_vif.key_expand_start);
+                @(negedge DUT_vif.key_expand_start);
                 collect_inputs_exp(item);
-                if (DUT_vif.key_expand_start == 0) exp_started = 1;
+                exp_started = 1;
             end
         end: key_expansion
 
@@ -113,9 +113,9 @@ class aes256_monitor extends uvm_monitor;
             disable enc_progress;
             
             while (enc_started == 0) begin
-                @(posedge DUT_vif.clk or negedge DUT_vif.next_val_req);
+                @(negedge DUT_vif.next_val_req);
                 collect_inputs_enc(item);
-                if (DUT_vif.next_val_req == 0) enc_started = 1;
+                enc_started = 1;
             end
         end: encryption
 
@@ -190,8 +190,8 @@ class aes256_monitor extends uvm_monitor;
                     `uvm_info({get_type_name(), ":loading"}, "Key expansion requested. Aborting loading", UVM_MEDIUM);
                 end: key_expansion_interrupt
             
-            join_any: load_or_exp
-            disable load_or_exp;
+                join_any: load_or_exp
+                disable load_or_exp;
             end
         end: loading
         join_none: exp_enc_loading

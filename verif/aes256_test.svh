@@ -81,16 +81,7 @@ class aes256_test_max_throughput extends aes256_test_base;
 
         // test scenario with key expansion and encryption max throughput
         set_items(50, 100);
-        assert(seq.randomize() with {
-            number_of_keys == num_keys;
-            number_of_plaintexts == num_pts;
-            exp_delay_mode == EXP_NO_DELAY;
-            enc_delay_mode == ENC_NO_DELAY;
-            wait_period_at_the_end == 20;
-        })
-        else `uvm_fatal(get_type_name(), "Randomization failed");
-        env.scbd.num_expected_items += num_items();
-        seq.start(env.agent_1.sequencer_1);
+        `SEND_DEFAULT_SEQ
 
         phase.drop_objection(this);
     endtask: run_phase
@@ -110,16 +101,7 @@ class aes256_test_key_gen extends aes256_test_base;
         seq = aes256_sequence::type_id::create("seq");
 
         set_items(4000, 1);
-        assert(seq.randomize() with {
-            number_of_keys == num_keys;
-            number_of_plaintexts == num_pts;
-            exp_delay_mode == EXP_NO_DELAY;
-            enc_delay_mode == ENC_NO_DELAY;
-            wait_period_at_the_end == 20;
-        })
-        else `uvm_fatal(get_type_name(), "Randomization failed");
-        env.scbd.num_expected_items += num_items();
-        seq.start(env.agent_1.sequencer_1);
+        `SEND_DEFAULT_SEQ
 
         phase.drop_objection(this);
     endtask: run_phase
@@ -194,18 +176,9 @@ class aes256_test_interrupts extends aes256_test_base;
         seq.start(env.agent_1.sequencer_1);
 
         // check one value at the end
-        set_items(1, 1);
-        assert(seq.randomize() with {
-            number_of_keys == num_keys;
-            number_of_plaintexts == num_pts;
-            exp_delay_mode == EXP_NO_DELAY;
-            enc_delay_mode == ENC_NO_DELAY;
-            wait_period_at_the_end == 20;
-        })
-        else `uvm_fatal(get_type_name(), "Randomization failed");
         seq.set_wait_key_ready(TRUE);
-        env.scbd.num_expected_items += num_items();
-        seq.start(env.agent_1.sequencer_1);
+        set_items(1, 1);
+        `SEND_DEFAULT_SEQ
 
         // test that encryption can be interrupted by new key request
         // and continue after new request
@@ -223,46 +196,22 @@ class aes256_test_interrupts extends aes256_test_base;
         seq.start(env.agent_1.sequencer_1);
 
         // check one value at the end
-        set_items(1, 1);
-        assert(seq.randomize() with {
-            number_of_keys == num_keys;
-            number_of_plaintexts == num_pts;
-            exp_delay_mode == EXP_NO_DELAY;
-            enc_delay_mode == ENC_NO_DELAY;
-            wait_period_at_the_end == 20;
-        })
-        else `uvm_fatal(get_type_name(), "Randomization failed");
         seq.set_wait_enc_done(TRUE);
-        env.scbd.num_expected_items += num_items();
-        seq.start(env.agent_1.sequencer_1);
+        set_items(1, 1);
+        `SEND_DEFAULT_SEQ
 
         // test scenario where loading is interrupted by new key expansion
         set_items(1, 100);
-        assert(seq.randomize() with {
-            number_of_keys == num_keys;
-            number_of_plaintexts == num_pts;
-            exp_delay_mode == EXP_NO_DELAY;
-            enc_delay_mode == ENC_NO_DELAY;
-            wait_period_at_the_end == 0;
-        })
+        assert(seq.randomize() with {`DEFAULT_CONSTRAINTS})
         else `uvm_fatal(get_type_name(), "Randomization failed");
         seq.set_key_exp_wait_for_loading(FALSE);
         env.scbd.num_expected_items += num_items();
         seq.start(env.agent_1.sequencer_1);
         
         // check one value at the end
-        set_items(1, 1);
-        assert(seq.randomize() with {
-            number_of_keys == num_keys;
-            number_of_plaintexts == num_pts;
-            exp_delay_mode == EXP_NO_DELAY;
-            enc_delay_mode == ENC_NO_DELAY;
-            wait_period_at_the_end == 20;
-        })
-        else `uvm_fatal(get_type_name(), "Randomization failed");
         seq.set_key_exp_wait_for_loading(TRUE);
-        env.scbd.num_expected_items += num_items();
-        seq.start(env.agent_1.sequencer_1);
+        set_items(1, 1);
+        `SEND_DEFAULT_SEQ
     
     phase.drop_objection(this);
     endtask: run_phase

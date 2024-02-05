@@ -90,4 +90,17 @@ typedef enum bit [1:0] {
     `uvm_error(get_type_name(), msg); \
     `uvm_info(get_type_name(), $sformatf("Entire packet:\n%s", item.sprint()), UVM_NONE)
 
+`define DEFAULT_CONSTRAINTS \
+    number_of_keys == num_keys; \
+    number_of_plaintexts == num_pts; \
+    exp_delay_mode == EXP_NO_DELAY; \
+    enc_delay_mode == ENC_NO_DELAY; \
+    wait_period_at_the_end == 20;
+
+`define SEND_DEFAULT_SEQ \
+    assert(seq.randomize() with {`DEFAULT_CONSTRAINTS}) \
+    else `uvm_fatal(get_type_name(), "Randomization failed"); \
+    env.scbd.num_expected_items += num_items(); \
+    seq.start(env.agent_1.sequencer_1);
+
 `endif

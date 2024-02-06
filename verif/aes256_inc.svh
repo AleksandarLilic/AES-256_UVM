@@ -45,11 +45,12 @@ const bit [255:0] CP_256_MAX = 256'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF
 // Enums
 typedef enum bit { FALSE = 0, TRUE = 1 } bool_t;
 typedef enum bit { UVM_PASSIVE = 0, UVM_ACTIVE = 1 } uvm_active_passive_enum;
-typedef enum bit [1:0] {
+typedef enum bit [2:0] {
     EXP_NO_DELAY = 0,
     EXP_WITH_DELAY = 1,
-    EXP_RANDOM = 2,
-    EXP_RANDOM_LONG_PULSE = 3
+    EXP_WITH_DELAY_LTL = 2, // LTL = Less Than Loading
+    EXP_RANDOM = 3,
+    EXP_RANDOM_LONG_PULSE = 4
 } exp_delay_mode_t;
 typedef enum bit [2:0] {
     ENC_NO_DELAY = 0,

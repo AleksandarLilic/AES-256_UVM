@@ -180,7 +180,8 @@ class aes256_monitor extends uvm_monitor;
                         `uvm_fatal({get_type_name(), ":loading"}, $sformatf("Too few data packets received but loading was not interrupted. Expected: %0d, received: %0d. Simulation aborted", LOADING_CYCLES - 1, data_out_cnt));
                     
                     // print packet and send it to the analysis port
-                    `uvm_info({get_type_name(), ":loading"}, $sformatf("Received ciphertext %0d\n%s", ciphertext_cnt, item_loading.sprint()), UVM_MEDIUM);
+                    `uvm_info({get_type_name(), ":loading"}, $sformatf("Received ciphertext %0d", ciphertext_cnt), UVM_LOW);
+                    `uvm_info({get_type_name(), ":loading"}, $sformatf("\n%s", item_loading.sprint()), UVM_MEDIUM);
                     ciphertext_cnt++;
                     item_ap.write(item_loading);
                 end: loading

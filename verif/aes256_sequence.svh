@@ -55,6 +55,7 @@ class aes256_sequence extends uvm_sequence#(aes256_seq_item);
             case (exp_delay_mode)
                 EXP_NO_DELAY: rnd_status = item.randomize() with { key_expand_start_delay == 1; key_expand_start_pulse == 1; };
                 EXP_WITH_DELAY: rnd_status = item.randomize() with { key_expand_start_delay > 1; };
+                EXP_WITH_DELAY_LTL: rnd_status = item.randomize() with { key_expand_start_delay inside {[1:LOADING_CYCLES]}; };
                 EXP_RANDOM: rnd_status = item.randomize();
                 EXP_RANDOM_LONG_PULSE: rnd_status = item.randomize() with { key_expand_start_pulse > KEY_EXP_CYCLES; };
                 default: `uvm_fatal(get_type_name(), "Unknown delay mode")

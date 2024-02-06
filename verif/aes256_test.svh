@@ -161,7 +161,6 @@ class aes256_test_interrupts extends aes256_test_base;
         seq = aes256_sequence::type_id::create("seq");
 
         // test that key generation can be interrupted by new key request
-        // and continue after new request
         set_items(100, 0);
         assert(seq.randomize() with {
             number_of_keys == num_keys;
@@ -181,8 +180,26 @@ class aes256_test_interrupts extends aes256_test_base;
         `SEND_DEFAULT_SEQ
 
         // test that encryption can be interrupted by new key request
-        // and continue after new request
-        set_items(1, 10);
+        set_items(100, 1);
+        assert(seq.randomize() with {
+            number_of_keys == num_keys;
+            number_of_plaintexts == num_pts;
+            exp_delay_mode == EXP_WITH_DELAY;
+            enc_delay_mode == ENC_WITH_DELAY;
+            wait_period_at_the_end == 0;
+        })
+        else `uvm_fatal(get_type_name(), "Randomization failed");
+        seq.set_wait_enc_done(FALSE);
+        // encryption is interrupted, so no items are expected
+        seq.start(env.agent_1.sequencer_1);
+
+        // check one value at the end
+        seq.set_wait_enc_done(TRUE);
+        set_items(1, 1);
+        `SEND_DEFAULT_SEQ
+
+        // test that encryption can be interrupted by new encryption request
+        set_items(1, 100);
         assert(seq.randomize() with {
             number_of_keys == num_keys;
             number_of_plaintexts == num_pts;
@@ -201,11 +218,18 @@ class aes256_test_interrupts extends aes256_test_base;
         `SEND_DEFAULT_SEQ
 
         // test scenario where loading is interrupted by new key expansion
-        set_items(1, 100);
-        assert(seq.randomize() with {`DEFAULT_CONSTRAINTS})
+        set_items(100, 1);
+        assert(seq.randomize() with {
+            number_of_keys == num_keys;
+            number_of_plaintexts == num_pts;
+            exp_delay_mode == EXP_WITH_DELAY_LTL;
+            enc_delay_mode == ENC_NO_DELAY;
+            wait_period_at_the_end == 0;
+        })
         else `uvm_fatal(get_type_name(), "Randomization failed");
         seq.set_key_exp_wait_for_loading(FALSE);
-        env.scbd.num_expected_items += num_items();
+        // one item is expected as the last loading cannot be interrupted by this sequence (no more keys requested)
+        env.scbd.num_expected_items += 1;
         seq.start(env.agent_1.sequencer_1);
         
         // check one value at the end

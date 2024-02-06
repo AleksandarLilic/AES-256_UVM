@@ -37,7 +37,7 @@ class aes256_sequence_sweep extends uvm_sequence#(aes256_seq_item);
             master_key_sweep[key_cnt % $size(master_key_sweep)] = key_cnt < number_of_keys/2;
             item = aes256_seq_item::type_id::create($sformatf("item_%0d_%0d", key_cnt, pt_cnt));
 
-            `uvm_info(get_type_name(), $sformatf(" ===> New Master Key. Count: %0d <===", key_cnt), UVM_MEDIUM)
+            `uvm_info(get_type_name(), $sformatf(" ===> New Master Key. Count: %0d <===", key_cnt), UVM_LOW)
             `ifdef VIVADO_RND_WORKAROUND
             item.sweep_type = sweep_type;
             `endif
@@ -50,7 +50,7 @@ class aes256_sequence_sweep extends uvm_sequence#(aes256_seq_item);
 
             for (pt_cnt = 0; pt_cnt < number_of_plaintexts; pt_cnt++) begin
                 data_in_sweep[pt_cnt % $size(data_in_sweep)] = pt_cnt < number_of_plaintexts/2;
-                `uvm_info(get_type_name(), $sformatf(" ===> New Plaintext. Count: %0d <===", pt_cnt), UVM_MEDIUM)
+                `uvm_info(get_type_name(), $sformatf(" ===> New Plaintext. Count: %0d <===", pt_cnt), UVM_LOW)
                 item.key_expand_start = 0;
                 item.next_val_req = 1;
                 item.next_val_req_delay = 1;

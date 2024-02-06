@@ -31,7 +31,7 @@ class aes256_sequence_ref_vectors extends uvm_sequence#(aes256_seq_item);
             item = aes256_seq_item::type_id::create($sformatf("item_%0d_%0d", key_cnt, pt_cnt));
             
             if (prev_master_key != ref_master_key || first_key_expanded == FALSE) begin // skip key expansion if master key is the same
-                `uvm_info(get_type_name(), $sformatf(" ===> New Master Key. Count: %0d <===", key_cnt), UVM_MEDIUM)
+                `uvm_info(get_type_name(), $sformatf(" ===> New Master Key. Count: %0d <===", key_cnt), UVM_LOW)
                 `ifdef VIVADO_RND_WORKAROUND
                 item.sweep_type = SWEEP_TYPE_NONE;
                 `endif
@@ -46,7 +46,7 @@ class aes256_sequence_ref_vectors extends uvm_sequence#(aes256_seq_item);
                 first_key_expanded = TRUE;
             end
 
-            `uvm_info(get_type_name(), $sformatf(" ===> New Plaintext. Count: %0d <===", pt_cnt), UVM_MEDIUM)
+            `uvm_info(get_type_name(), $sformatf(" ===> New Plaintext. Count: %0d <===", pt_cnt), UVM_LOW)
             item.key_expand_start = 0;
             item.next_val_req = 1;
             item.next_val_req_delay = 1;

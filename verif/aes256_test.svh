@@ -320,8 +320,6 @@ class aes256_test_ref_vectors extends aes256_test_base;
 
     task run_phase(uvm_phase phase);
         aes256_sequence_ref_vectors seq;
-        phase.raise_objection(this);
-        #10;
         
         if (! $value$plusargs("ref_vectors_path=%s", ref_vectors_path))
             `uvm_fatal(get_type_name(), "ref_vectors_path not defined");
@@ -336,17 +334,20 @@ class aes256_test_ref_vectors extends aes256_test_base;
             `uvm_fatal(get_type_name(), $sformatf("Error: Unable to open file: %s", ref_vectors_path));
         void'($fgets(line, fd_scbd)); // skip header line
         
-        seq = aes256_sequence_ref_vectors::type_id::create("seq");
         if ($test$plusargs("MCT_VECTORS")) begin
             if ($test$plusargs("ALLOW_VECTOR_CHECKER_NONE")) begin
                 `uvm_fatal(get_type_name(), "MCT_VECTORS and ALLOW_VECTOR_CHECKER_NONE cannot be used together");
             end
             seq.sub = sub;
         end
+        
+        phase.raise_objection(this);
+        #10;
+        seq = aes256_sequence_ref_vectors::type_id::create("seq");
+
         seq.fd_vector = fd_seq;
         env.scbd.use_ref_vectors = TRUE;
         env.scbd.fd_vector = fd_scbd;
-        env.scbd.num_expected_items += num_items();
         seq.start(env.agent_1.sequencer_1);
         
         phase.drop_objection(this);

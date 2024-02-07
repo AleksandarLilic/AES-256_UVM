@@ -148,10 +148,18 @@ class aes256_test_delays extends aes256_test_base;
 endclass: aes256_test_delays
 
 class aes256_test_interrupts extends aes256_test_base;
+    int unsigned num_interrupts = 100;
+    virtual aes256_if DUT_vif;
     `uvm_component_utils(aes256_test_interrupts)
     
     function new (string name = "aes256_test_interrupts", uvm_component parent = null);
         super.new(name, parent);
+    endfunction
+
+    function void build_phase(uvm_phase phase);
+        super.build_phase(phase);
+        if (!uvm_config_db#(virtual aes256_if)::get(this, "", "DUT_vif", DUT_vif))
+            `uvm_fatal(get_type_name(), "Virtual interface not defined. Simulation aborted");
     endfunction
 
     task run_phase(uvm_phase phase);
@@ -160,82 +168,87 @@ class aes256_test_interrupts extends aes256_test_base;
         #10;
         seq = aes256_sequence::type_id::create("seq");
 
-        // test that key generation can be interrupted by new key request
-        set_items(100, 0);
-        assert(seq.randomize() with {
-            number_of_keys == num_keys;
-            number_of_plaintexts == num_pts;
-            exp_delay_mode == EXP_WITH_DELAY;
-            // don't care about encryption, never reached
-            wait_period_at_the_end == 0;
-        })
-        else `uvm_fatal(get_type_name(), "Randomization failed");
-        seq.set_wait_key_ready(FALSE);
-        env.scbd.num_expected_items += num_items();
-        seq.start(env.agent_1.sequencer_1);
+        `uvm_info(get_type_name(), "Test that key generation can be interrupted by new key request", UVM_LOW)
+        repeat(num_interrupts) begin
+            set_items(1, 0);
+            assert(seq.randomize() with {
+                number_of_keys == num_keys;
+                number_of_plaintexts == num_pts;
+                exp_delay_mode == EXP_WITH_DELAY;
+                // don't care about encryption, never reached
+                wait_period_at_the_end == 0;
+            })
+            else `uvm_fatal(get_type_name(), "Randomization failed");
+            seq.set_wait_key_ready(FALSE);
+            env.scbd.num_expected_items += num_items();
+            seq.start(env.agent_1.sequencer_1);
 
-        // check one value at the end
-        seq.set_wait_key_ready(TRUE);
-        set_items(1, 1);
-        `SEND_DEFAULT_SEQ
+            // check one value at the end
+            seq.set_wait_key_ready(TRUE);
+            set_items(1, 1);
+            `SEND_DEFAULT_SEQ
+        end
 
-        // test that encryption can be interrupted by new key request
-        set_items(100, 1);
-        assert(seq.randomize() with {
-            number_of_keys == num_keys;
-            number_of_plaintexts == num_pts;
-            exp_delay_mode == EXP_WITH_DELAY;
-            enc_delay_mode == ENC_WITH_DELAY;
-            wait_period_at_the_end == 0;
-        })
-        else `uvm_fatal(get_type_name(), "Randomization failed");
-        seq.set_wait_enc_done(FALSE);
-        // encryption is interrupted, so no items are expected
-        seq.start(env.agent_1.sequencer_1);
+        `uvm_info(get_type_name(), "Test that encryption can be interrupted by new key request", UVM_LOW)
+        repeat(num_interrupts) begin
+            set_items(1, 1);
+            assert(seq.randomize() with {
+                number_of_keys == num_keys;
+                number_of_plaintexts == num_pts;
+                exp_delay_mode == EXP_WITH_DELAY;
+                enc_delay_mode == ENC_WITH_DELAY;
+                wait_period_at_the_end == 0;
+            })
+            else `uvm_fatal(get_type_name(), "Randomization failed");
+            seq.set_wait_enc_done(FALSE);
+            // encryption is interrupted, so no items are expected
+            seq.start(env.agent_1.sequencer_1);
 
-        // check one value at the end
-        seq.set_wait_enc_done(TRUE);
-        set_items(1, 1);
-        `SEND_DEFAULT_SEQ
+            // check one value at the end
+            seq.set_wait_enc_done(TRUE);
+            set_items(1, 1);
+            `SEND_DEFAULT_SEQ
+        end
 
-        // test that encryption can be interrupted by new encryption request
-        set_items(1, 100);
-        assert(seq.randomize() with {
-            number_of_keys == num_keys;
-            number_of_plaintexts == num_pts;
-            exp_delay_mode == EXP_NO_DELAY;
-            enc_delay_mode == ENC_WITH_DELAY;
-            wait_period_at_the_end == 0;
-        })
-        else `uvm_fatal(get_type_name(), "Randomization failed");
-        seq.set_wait_enc_done(FALSE);
-        // encryption is interrupted, so no items are expected
-        seq.start(env.agent_1.sequencer_1);
+        `uvm_info(get_type_name(), "Test that encryption can be interrupted by new encryption request", UVM_LOW)
+        repeat(num_interrupts) begin
+            set_items(1, 1);
+            assert(seq.randomize() with {
+                number_of_keys == num_keys;
+                number_of_plaintexts == num_pts;
+                exp_delay_mode == EXP_NO_DELAY;
+                enc_delay_mode == ENC_WITH_DELAY;
+                wait_period_at_the_end == 0;
+            })
+            else `uvm_fatal(get_type_name(), "Randomization failed");
+            seq.set_wait_enc_done(FALSE);
+            // encryption is interrupted, so no items are expected
+            seq.start(env.agent_1.sequencer_1);
 
-        // check one value at the end
-        seq.set_wait_enc_done(TRUE);
-        set_items(1, 1);
-        `SEND_DEFAULT_SEQ
+            // check one value at the end
+            seq.set_wait_enc_done(TRUE);
+            set_items(1, 1);
+            `SEND_DEFAULT_SEQ
+        end
 
-        // test scenario where loading is interrupted by new key expansion
-        set_items(100, 1);
-        assert(seq.randomize() with {
-            number_of_keys == num_keys;
-            number_of_plaintexts == num_pts;
-            exp_delay_mode == EXP_WITH_DELAY_LTL;
-            enc_delay_mode == ENC_NO_DELAY;
-            wait_period_at_the_end == 0;
-        })
-        else `uvm_fatal(get_type_name(), "Randomization failed");
-        seq.set_key_exp_wait_for_loading(FALSE);
-        // one item is expected as the last loading cannot be interrupted by this sequence (no more keys requested)
-        env.scbd.num_expected_items += 1;
-        seq.start(env.agent_1.sequencer_1);
-        
-        // check one value at the end
-        seq.set_key_exp_wait_for_loading(TRUE);
-        set_items(1, 1);
-        `SEND_DEFAULT_SEQ
+        `uvm_info(get_type_name(), "Test that key expansion can be interrupted by new key request", UVM_LOW)
+        repeat(num_interrupts) begin
+            set_items(2, 1); // 2 keys as there has to be one entire exp+enc in order to start loading process, 2nd key interrupts 1st loading
+            assert(seq.randomize() with {
+                number_of_keys == num_keys;
+                number_of_plaintexts == num_pts;
+                exp_delay_mode == EXP_WITH_DELAY_LTL;
+                enc_delay_mode == ENC_NO_DELAY;
+                wait_period_at_the_end == 0;
+            })
+            else `uvm_fatal(get_type_name(), "Randomization failed");
+            seq.set_key_exp_wait_for_loading(FALSE);
+            // one item is expected as the last loading cannot be interrupted by this sequence (no more keys requested)
+            env.scbd.num_expected_items += 1;
+            seq.start(env.agent_1.sequencer_1);
+            // wait for second loading to end before new key request
+            repeat(LOADING_CYCLES+3) @(posedge DUT_vif.clk);
+        end
     
     phase.drop_objection(this);
     endtask: run_phase

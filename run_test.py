@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('--coverage-only', action='store_true', help='Only run coverage analysis. Relies on the existing test directories for the specified tests')
     parser.add_argument('--seed', type=int, help='Seed value for the tests')
     parser.add_argument('-v', '--ref-vectors', help='Specify name of the reference vector to run')
-    parser.add_argument('--ref-vectors-list', help='Path to a JSON file containing test name and a list of reference vectors')
+    parser.add_argument('--ref-vectors-testlist', help='Path to a JSON file containing test name and a list of reference vectors')
     parser.add_argument('--log_wave', action='store_true', help='Include log wave command in TCL script')
     return parser.parse_args()
 
@@ -47,7 +47,7 @@ def validate_list(specified_list, valid_list):
         raise ValueError(f"Invalid elements specified: {', '.join(invalid_list_elements)}")
     return specified_list
 
-def get_ref_vectors_list(vec):
+def get_ref_vectors_testlist(vec):
     return [v for v in vec['vectors'].keys()]
 
 def run_test(test_name, run_dir, build_dir, ref_vectors_test, ref_vectors_dict={}, sv_seed=11):
@@ -126,7 +126,7 @@ def main():
         all_tests = validate_list(read_from_json(testlist_path), valid_tests)
     elif args.test:
         all_tests = validate_list(args.test, valid_tests)
-    elif not (args.ref_vectors_list or args.ref_vectors):
+    elif not (args.ref_vectors_testlist or args.ref_vectors):
         raise ValueError("No tests specified. Please use -t|--test or --testlist to specify tests.")
     
     # load internal reference vector list
@@ -135,17 +135,17 @@ def main():
     
     ref_vectors_test = valid_ref_vectors["test_name"]
     ref_vectors_config = {} 
-    if args.ref_vectors_list:
-        ref_vectors_config = read_from_json(args.ref_vectors_list)
-        all_ref_vectors = validate_list(get_ref_vectors_list(ref_vectors_config), get_ref_vectors_list(valid_ref_vectors))
+    if args.ref_vectors_testlist:
+        ref_vectors_config = read_from_json(args.ref_vectors_testlist)
+        all_ref_vectors = validate_list(get_ref_vectors_testlist(ref_vectors_config), get_ref_vectors_testlist(valid_ref_vectors))
         all_vector_tests = [ref_vectors_test + "_" + ref_vector for ref_vector in all_ref_vectors]
         all_tests = all_tests + all_vector_tests
     elif args.ref_vectors:
-        all_ref_vectors = validate_list([args.ref_vectors], get_ref_vectors_list(valid_ref_vectors))
+        all_ref_vectors = validate_list([args.ref_vectors], get_ref_vectors_testlist(valid_ref_vectors))
         all_vector_tests = [ref_vectors_test + "_" + ref_vector for ref_vector in all_ref_vectors]
         all_tests = all_vector_tests
     elif not (args.testlist or args.test):
-        raise ValueError("No reference vectors specified. Please use -v|--ref-vectors or --ref-vectors-list to specify reference vectors.")
+        raise ValueError("No reference vectors specified. Please use -v|--ref-vectors or --ref-vectors-testlist to specify reference vectors.")
     else:
         ref_vectors_test = None
 
@@ -164,20 +164,21 @@ def main():
     if not os.path.exists(run_dir):
         os.makedirs(run_dir)
 
-    # handle build directory and build if necessary
-    build_dir = os.path.join(run_dir, "build")
-    if args.keep_build and os.path.exists(f"{build_dir}/.elab.touchfile"):
-        print(f"Reusing existing build directory at <{build_dir}>")
-    else:
-        if os.path.exists(build_dir):
-            shutil.rmtree(build_dir)
-        os.makedirs(build_dir)
-        makefile_path = os.path.join(os.getcwd(), "Makefile")
-        linked_makefile_path = os.path.join(build_dir, "Makefile")
-        os.symlink(makefile_path, linked_makefile_path)
+    if not args.coverage_only:
+        # handle build directory and build if necessary
+        build_dir = os.path.join(run_dir, "build")
+        if args.keep_build and os.path.exists(f"{build_dir}/.elab.touchfile"):
+            print(f"Reusing existing build directory at <{build_dir}>")
+        else:
+            if os.path.exists(build_dir):
+                shutil.rmtree(build_dir)
+            os.makedirs(build_dir)
+            makefile_path = os.path.join(os.getcwd(), "Makefile")
+            linked_makefile_path = os.path.join(build_dir, "Makefile")
+            os.symlink(makefile_path, linked_makefile_path)
 
-        make_status = subprocess.run(["make", "elab"], cwd=build_dir)
-        check_make_status(make_status, "build")
+            make_status = subprocess.run(["make", "elab"], cwd=build_dir)
+            check_make_status(make_status, "build")
 
     # check if the specified number of jobs exceeds the number of CPU cores
     if args.jobs < 1:

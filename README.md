@@ -1,6 +1,11 @@
 # AES-256 UVM tesbench
 
-UVM testbench for AES-256 VHDL design
+Implemented UVM testbench for AES-256 VHDL design is available [in this document](aes-256_dv_doc.pdf)  
+This README gives a brief overview of the testbench structure and how to run the tests
+
+## Top level block diagram
+
+![](img/aes-256_uvm_top.svg)
 
 # Running tests
 ## Environment and tools
